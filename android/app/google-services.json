@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "493357910485",
+    "project_id": "tfg-amanda",
+    "storage_bucket": "tfg-amanda.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:493357910485:android:386a01e3f1a7fd16c5155c",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application_1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHnyX5OFwP3IwotGxV5slcmM5vi03FAs8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

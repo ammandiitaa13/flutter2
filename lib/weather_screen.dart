@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:responsive_framework/responsive_framework.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'theme.dart';
 
 class WeatherTableScreen extends StatefulWidget {
   const WeatherTableScreen({super.key});
@@ -78,69 +78,73 @@ class _WeatherTableScreenState extends State<WeatherTableScreen> {
     }
   }
 
-  Widget buildForecastRow(Map<String, dynamic> forecast, double fontSize) {
+  Widget _buildForecastRow(Map<String, dynamic> forecast) {
     final dateTime = DateTime.parse(forecast['dt_txt']);
     final hour = DateFormat.Hm().format(dateTime);
     final temp = forecast['main']['temp'];
     final desc = forecast['weather'][0]['description'];
     final icon = forecast['weather'][0]['icon'];
-    final rowHeight = MediaQuery.of(context).size.height * 0.07;
+    
+    final fontSize = AppTheme.getFontSize(context, mobile: 14, tablet: 16, desktop: 18);
+    final spacing = AppTheme.getSpacing(context, mobile: 8, tablet: 12, desktop: 16);
 
     return Container(
-      margin: EdgeInsets.symmetric(vertical: MediaQuery.of(context).size.height * 0.006),
-      padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.04, vertical: MediaQuery.of(context).size.width * 0.012),
-      height: rowHeight,
-      decoration: BoxDecoration(
-        color: Colors.white,
+      margin: EdgeInsets.symmetric(vertical: spacing / 2),
+      padding: EdgeInsets.all(spacing),
+      decoration: AppTheme.getBoxDecoration(context).copyWith(
+        color: AppTheme.cardColor,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Row(
         children: [
           SizedBox(
-            width: MediaQuery.of(context).size.width * 0.15, 
-            child: FittedBox ( fit: BoxFit.scaleDown,
-            child:  Text (
-              hour, 
-              style: TextStyle(
-                fontSize: fontSize,
-                fontWeight: FontWeight.bold,
-                color: Colors.deepPurple.shade700,
-              )
-            )
+            width: AppTheme.isDesktop(context) ? 80 : 60,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                hour,
+                style: TextStyle(
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.primaryColor,
+                ),
+              ),
+            ),
           ),
-          ),
+          SizedBox(width: spacing),
           Image.network(
             'https://openweathermap.org/img/wn/$icon@2x.png',
-            width: MediaQuery.of(context).size.width * 0.1,
-            height: rowHeight * 0.8,
+            width: AppTheme.isDesktop(context) ? 60 : AppTheme.isTablet(context) ? 50 : 40,
+            height: AppTheme.isDesktop(context) ? 60 : AppTheme.isTablet(context) ? 50 : 40,
+            errorBuilder: (context, error, stackTrace) => Icon(
+              Icons.cloud,
+              size: AppTheme.isDesktop(context) ? 40 : 30,
+              color: AppTheme.secondaryColor,
+            ),
           ),
-          SizedBox(width: MediaQuery.of(context).size.width * 0.02),
+          SizedBox(width: spacing),
           Expanded(
-            child: FittedBox (
+            flex: 3,
+            child: FittedBox(
               fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
               child: Text(
                 desc,
                 style: TextStyle(
-                  fontSize: fontSize, 
-                  color: Colors.grey.shade800
+                  fontSize: fontSize,
+                  color: AppTheme.textColor,
                 ),
-              overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
-          ),
-          SizedBox(width: MediaQuery.of(context).size.width * 0.02),
+          SizedBox(width: spacing),
           Container(
-            padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.03,
-           vertical: MediaQuery.of(context).size.height * 0.006,),
+            padding: EdgeInsets.symmetric(
+              horizontal: spacing,
+              vertical: spacing / 2,
+            ),
             decoration: BoxDecoration(
-              color: Colors.deepPurple.shade50,
+              color: AppTheme.primaryColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: FittedBox(
@@ -149,9 +153,10 @@ class _WeatherTableScreenState extends State<WeatherTableScreen> {
                 '${temp.toStringAsFixed(1)}°C',
                 style: TextStyle(
                   fontSize: fontSize,
-                  color: Colors.deepPurple.shade700,
-              ),  
-            )
+                  color: AppTheme.primaryColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
         ],
@@ -159,22 +164,185 @@ class _WeatherTableScreenState extends State<WeatherTableScreen> {
     );
   }
 
+  Widget _buildSearchForm() {
+    return Container(
+      constraints: BoxConstraints(maxWidth: AppTheme.getMaxWidth(context)),
+      padding: AppTheme.getPadding(context),
+      decoration: AppTheme.getBoxDecoration(context).copyWith(
+        color: AppTheme.cardColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.location_on,
+                color: AppTheme.primaryColor,
+                size: AppTheme.isDesktop(context) ? 28 : 24,
+              ),
+              SizedBox(width: AppTheme.getSpacing(context)),
+              Expanded(
+                child: TextField(
+                  controller: _cityController,
+                  style: TextStyle(
+                    fontSize: AppTheme.getFontSize(context, mobile: 16, tablet: 18, desktop: 20),
+                  ),
+                  decoration: AppTheme.getInputDecoration(
+                    context,
+                    label: Text('Ciudad'),
+                    hintText: 'Ingresa el nombre de una ciudad',
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: AppTheme.getSpacing(context, mobile: 16, tablet: 20, desktop: 24)),
+          SizedBox(
+            width: double.infinity,
+            height: AppTheme.isDesktop(context) ? 60 : 50,
+            child: ElevatedButton.icon(
+              onPressed: _isLoading ? null : () => fetchForecast(_cityController.text),
+              style: AppTheme.getButtonStyle(context).copyWith(
+                backgroundColor: WidgetStateProperty.resolveWith((states) {
+                  if (states.contains(WidgetState.disabled)) {
+                    return Colors.grey.shade400;
+                  }
+                  return AppTheme.primaryColor;
+                }),
+                elevation: WidgetStateProperty.all(3),
+                shape: WidgetStateProperty.all(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              icon: _isLoading
+                  ? SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Icon(Icons.search),
+              label: FittedBox( // Ensure text fits
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  _isLoading ? 'Buscando...' : 'Buscar pronóstico',
+                  style: TextStyle(
+                    fontSize: AppTheme.getFontSize(context, mobile: 16, tablet: 18, desktop: 20),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          if (_errorMessage != null)
+            Padding(
+              padding: EdgeInsets.only(top: AppTheme.getSpacing(context)),
+              child: Text(
+                _errorMessage!,
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: AppTheme.getFontSize(context, mobile: 14, tablet: 16, desktop: 18),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            _hasSearched ? Icons.cloud_off : Icons.cloud_queue,
+            size: AppTheme.isDesktop(context) ? 100 : AppTheme.isTablet(context) ? 90 : 80,
+            color: AppTheme.primaryColor.withOpacity(0.6),
+          ),
+          SizedBox(height: AppTheme.getSpacing(context, mobile: 16, tablet: 20, desktop: 24)),
+          Text(
+            _hasSearched ? "No se encontraron datos" : "Sin datos aún",
+            textAlign: TextAlign.center, // Centrar texto
+            style: TextStyle(
+              fontSize: AppTheme.getFontSize(context, mobile: 18, tablet: 20, desktop: 22),
+              color: AppTheme.textColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          SizedBox(height: AppTheme.getSpacing(context, mobile: 8, tablet: 10)),
+          Padding( // Añadir padding horizontal al texto inferior
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Text(
+              _hasSearched
+                  ? "Intenta con otra ciudad o revisa la conexión"
+                  : "Busca el pronóstico de una ciudad para ver los resultados aquí",
+              textAlign: TextAlign.center, // Centrar texto
+              style: TextStyle(
+                fontSize: AppTheme.getFontSize(context, mobile: 14, tablet: 16, desktop: 18),
+                color: AppTheme.secondaryColor,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildForecastList() {
+    return ListView(
+      padding: AppTheme.getPadding(context),
+      children: groupedForecasts.entries.map((entry) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              margin: EdgeInsets.only(
+                top: AppTheme.getSpacing(context),
+                bottom: AppTheme.getSpacing(context, mobile: 12, tablet: 16, desktop: 20),
+              ),
+              padding: EdgeInsets.symmetric(
+                horizontal: AppTheme.getSpacing(context, mobile: 16, tablet: 20, desktop: 24),
+                vertical: AppTheme.getSpacing(context, mobile: 8, tablet: 12, desktop: 16),
+              ),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                entry.key,
+                style: TextStyle(
+                  fontSize: AppTheme.getFontSize(context, mobile: 18, tablet: 20, desktop: 22),
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.primaryColor,
+                ),
+              ),
+            ),
+            ...entry.value.map((item) => _buildForecastRow(item)),
+            SizedBox(height: AppTheme.getSpacing(context, mobile: 16, tablet: 20, desktop: 24)),
+          ],
+        );
+      }).toList(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isTablet = ResponsiveBreakpoints.of(context).isTablet;
-    final titleFontSize = isTablet ? 22.0 : 18.0;
-    final itemFontSize = isTablet ? 18.0 : 14.0;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final double formWidth = isTablet ? 500 : screenWidth - 48;
+    final titleSize = AppTheme.getFontSize(context, mobile: 22, tablet: 26, desktop: 30);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Pronóstico del clima',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.white,
+            fontSize: titleSize,
           ),
         ),
         backgroundColor: Colors.transparent,
@@ -191,184 +359,33 @@ class _WeatherTableScreenState extends State<WeatherTableScreen> {
           ),
         ),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              children: [
-                Center(
-                  child: Container(
-                    width: formWidth,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.location_on, 
-                              color: Colors.deepPurple,
-                              size: 24,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: TextField(
-                                controller: _cityController,
-                                decoration: InputDecoration(
-                                  labelText: 'Ciudad',
-                                  labelStyle: TextStyle(color: Colors.deepPurple),
-                                  hintText: 'Ingresa el nombre de una ciudad',
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.deepPurple.shade200),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.deepPurple.shade200),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: Colors.deepPurple, width: 2),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: ElevatedButton.icon(
-                            onPressed: _isLoading ? null : () => fetchForecast(_cityController.text),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.deepPurple,
-                              foregroundColor: Colors.white,
-                              disabledBackgroundColor: Colors.grey.shade400,
-                              elevation: 3,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            icon: _isLoading
-                                ? SizedBox(
-                                    height: 24,
-                                    width: 24,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : Icon(Icons.search),
-                            label: Text(_isLoading ? 'Buscando...' : 'Buscar pronóstico'),
-                          ),
-                        ),
-                        if (_errorMessage != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 12.0),
-                            child: Text(
-                              _errorMessage!,
-                              style: const TextStyle(color: Colors.red),
-                            ),
-                          ),
-                      ],
-                    ),
+          child: Column(
+            children: [
+              Padding(
+                padding: AppTheme.getPadding(context),
+                child: AppTheme.centerContent(
+                  context: context,
+                  child: _buildSearchForm(),
+                ),
+              ),
+              SizedBox(height: AppTheme.getSpacing(context, mobile: 16, tablet: 20, desktop: 24)),
+              Expanded(
+                child: Container(
+                  margin: AppTheme.getHorizontalPadding(context),
+                  decoration: AppTheme.getBoxDecoration(context).copyWith(
+                    color: AppTheme.backgroundColor.withOpacity(0.95),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: groupedForecasts.isEmpty
+                        ? _buildEmptyState()
+                        : _buildForecastList(),
                   ),
                 ),
-                const SizedBox(height: 24),
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
-                      child: groupedForecasts.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    _hasSearched ? Icons.cloud_off : Icons.cloud_queue,
-                                    size: 80,
-                                    color: Colors.deepPurple.shade300,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    _hasSearched ? "No se encontraron datos" : "Sin datos aún",
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      color: Colors.grey.shade700,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    _hasSearched
-                                        ? "Intenta con otra ciudad"
-                                        : "Busca el pronóstico de una ciudad",
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey.shade500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : ListView(
-                              padding: const EdgeInsets.all(16),
-                              children: groupedForecasts.entries.map((entry) {
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      margin: const EdgeInsets.only(top: 8, bottom: 16),
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 16, vertical: 8),
-                                      decoration: BoxDecoration(
-                                        color: Colors.deepPurple.shade100,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        entry.key,
-                                        style: TextStyle(
-                                          fontSize: titleFontSize,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.deepPurple.shade800,
-                                        ),
-                                      ),
-                                    ),
-                                    ...entry.value
-                                        .map((item) =>
-                                            buildForecastRow(item, itemFontSize))
-                                        ,
-                                    const SizedBox(height: 16),
-                                  ],
-                                );
-                              }).toList(),
-                            ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+              SizedBox(height: AppTheme.getSpacing(context)),
+            ],
           ),
         ),
       ),

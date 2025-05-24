@@ -6,6 +6,7 @@ class FirestoreService {
   static final FirebaseFirestore _db = FirebaseFirestore.instance;
   static final Logger _logger = Logger();
 
+
   //Lógica para Hoteles
   static final List<Map<String, dynamic>> listaHoteles = [
     {'id': '1', 'nombre': 'Hotel Central', 'ciudad': 'Madrid', 'plazas': 120, 'precio': 95.0, 'estrellas': 4, 'fecha': Timestamp.fromDate(DateTime.parse('2025-07-01T00:00:00.000Z'))},
@@ -33,8 +34,7 @@ class FirestoreService {
   static Future<void> crearHoteles() async {
     final hotelesSnapshot = await _db.collection('hoteles').limit(1).get();
     if (hotelesSnapshot.docs.isEmpty) {
-      for (var hotel in listaHoteles) { await _db.collection('hoteles').add(hotel);}
-      _logger.i("Datos de hoteles creados exitosamente");
+      for (var hotel in listaHoteles) { await _db.collection('hoteles').doc(hotel['id']).set(hotel);}
     } else {_logger.i("La colección 'hoteles' ya existe. No se crearán nuevos datos.");}
   }
 
@@ -51,13 +51,10 @@ class FirestoreService {
         .where('fecha', isGreaterThan: startDate)
         .where('fecha', isLessThan: endDate)
         .get();
-
     List<Map<String, dynamic>> hDisponibles = [];
-
     for (var doc in hoteles.docs) {
       final data = doc.data();
       final plazas = data['plazas'] ?? 0;
-
       if (plazas >= numPersonas) {
         hDisponibles.add({
           'id': doc.id,
@@ -86,10 +83,8 @@ class FirestoreService {
 
   static Future<void> crearVuelos() async {
     final snapshot = await _db.collection('vuelos').limit(1).get();
-
     if (snapshot.docs.isEmpty) {
-      for (var vuelo in listaVuelos) { await _db.collection('vuelos').add(vuelo);}
-        _logger.i("Vuelos creados exitosamente");
+      for (var vuelo in listaVuelos) {await _db.collection('vuelos').doc(vuelo['id']).set(vuelo);}
     } else { _logger.i("La colección 'vuelos' ya existe. No se crearán nuevos datos.");}
   }
 
@@ -101,7 +96,6 @@ class FirestoreService {
   }) async {
     final startDate = Timestamp.fromDate(DateTime(fecha.year, fecha.month, fecha.day, 0, 0, 0));
     final endDate = Timestamp.fromDate(DateTime(fecha.year, fecha.month, fecha.day, 23, 59, 59));
-    
     final vuelos = await _db
         .collection('vuelos')
         .where('origen', isEqualTo: origen)
@@ -109,13 +103,10 @@ class FirestoreService {
         .where('fecha', isGreaterThanOrEqualTo: startDate)
         .where('fecha', isLessThan: endDate)
         .get();
-
     List<Map<String, dynamic>> vDisponibles = [];
-
     for (var doc in vuelos.docs) {
       final data = doc.data();
       final plazas = data['plazas'] ?? 0;
-
       if (plazas >= numPersonas) {
         vDisponibles.add({
           'id': doc.id,
@@ -143,10 +134,8 @@ class FirestoreService {
 
   static Future<void> crearTrenes() async {
     final snapshot = await _db.collection('trenes').limit(1).get();
-
     if (snapshot.docs.isEmpty) {
-      for (var tren in listaTrenes) { await _db.collection('trenes').add(tren);}
-        _logger.i("Trenes creados exitosamente");
+      for (var tren in listaTrenes) {await _db.collection('trenes').doc(tren['id']).set(tren);}
     } else { _logger.i("La colección 'trenes' ya existe. No se crearán nuevos datos.");}
   }
 
@@ -158,7 +147,6 @@ class FirestoreService {
   }) async {
     final startDate = Timestamp.fromDate(DateTime(fecha.year, fecha.month, fecha.day, 0, 0, 0));
     final endDate = Timestamp.fromDate(DateTime(fecha.year, fecha.month, fecha.day, 23, 59, 59));
-
     final trenes = await _db
         .collection('trenes')
         .where('origen', isEqualTo: origen)
@@ -166,13 +154,10 @@ class FirestoreService {
         .where('fecha', isGreaterThanOrEqualTo: startDate)
         .where('fecha', isLessThan: endDate)
         .get();
-
     List<Map<String, dynamic>> tDisponibles = [];
-
     for (var doc in trenes.docs) {
       final data = doc.data();
       final plazas = data['plazas'] ?? 0;
-
       if (plazas >= numPersonas) {
         tDisponibles.add({
           'id': doc.id,
@@ -215,15 +200,11 @@ class FirestoreService {
   static Future<void> crearCochesCiudad() async {
     final snapshot = await _db.collection('coches_ciudad').limit(1).get();
     final snapshot2 = await _db.collection('coches_ciudades').limit(1).get();
-
     if (snapshot.docs.isEmpty) {
-      for (var coche in cochesPorCiudad) { await _db.collection('coches_ciudad').add(coche); }
-        _logger.i("Coches por ciudad creados exitosamente");
+      for (var coche in cochesPorCiudad) { await _db.collection('coches_ciudad').doc(coche['id']).set(coche); }
     } else {  _logger.i("La colección 'coches_ciudad' ya existe. No se crearán nuevos datos.");  }
-
     if (snapshot2.docs.isEmpty) {
-      for (var coche in cochesEntreCiudades) { await _db.collection('coches_ciudades').add(coche); }
-        _logger.i("Coches entre ciudades creados exitosamente");
+      for (var coche in cochesEntreCiudades) { await _db.collection('coches_ciudades').doc(coche['id']).set(coche); }
     } else {  _logger.i("La colección 'coches_ciudades' ya existe. No se crearán nuevos datos.");  }
   }
 
@@ -233,12 +214,9 @@ class FirestoreService {
     required int numPersonas,
     required DateTime fecha,
   }) async {
-
     final startDate = Timestamp.fromDate(DateTime(fecha.year, fecha.month, fecha.day, 0, 0, 0));
     final endDate = Timestamp.fromDate(DateTime(fecha.year, fecha.month, fecha.day, 23, 59, 59));
-
     List<Map<String, dynamic>> cDisponibles = [];
-
     if (destino != null && destino.isNotEmpty) {
     final cochesLocales = await _db
         .collection('coches_ciudad')
@@ -246,11 +224,9 @@ class FirestoreService {
         .where('fecha', isGreaterThanOrEqualTo: startDate)
         .where('fecha', isLessThan: endDate)
         .get();
-
     for (var doc in cochesLocales.docs) {
       final data = doc.data();
       final plazas = data['plazas'] ?? 0;
-
       if (plazas >= numPersonas) {
         cDisponibles.add({
           'id': doc.id,
@@ -260,8 +236,6 @@ class FirestoreService {
       }
     }
   }
-
-  // 2. Buscar coches entre ciudades (origen → destino)
   if (destino != null && destino.isNotEmpty) {
     final cochesTrayecto = await _db
         .collection('coches_ciudades')
@@ -270,11 +244,9 @@ class FirestoreService {
         .where('fecha', isGreaterThanOrEqualTo: startDate)
         .where('fecha', isLessThan: endDate)
         .get();
-
     for (var doc in cochesTrayecto.docs) {
       final data = doc.data();
       final plazas = data['plazas'] ?? 0;
-
       if (plazas >= numPersonas) {
         cDisponibles.add({
           'id': doc.id,
@@ -303,10 +275,8 @@ class FirestoreService {
 
   static Future<void> crearActividades() async {
     final snapshot = await _db.collection('actividades').limit(1).get();
-
     if (snapshot.docs.isEmpty) {
-      for (var actividad in listaActividades) { await _db.collection('actividades').add(actividad); }
-        _logger.i("Actividades creadas exitosamente");
+      for (var actividad in listaActividades) { await _db.collection('actividades').doc(actividad['id']).set(actividad); }
     } else { _logger.i("La colección 'actividades' ya existe. No se crearán nuevos datos."); }
   }
 
@@ -317,20 +287,16 @@ class FirestoreService {
   }) async {
     final startDate = Timestamp.fromDate(DateTime(fecha.year, fecha.month, fecha.day, 0, 0, 0));
     final endDate = Timestamp.fromDate(DateTime(fecha.year, fecha.month, fecha.day, 23, 59, 59));
-
     final actividades = await _db
         .collection('actividades')
         .where('ciudad', isEqualTo: ciudad)
         .where('fecha', isGreaterThanOrEqualTo: startDate)
         .where('fecha', isLessThan: endDate)
         .get();
-
     List<Map<String, dynamic>> aDisponibles = [];
-
     for (var doc in actividades.docs) {
       final data = doc.data();
       final plazas = data['plazas'] ?? 0;
-
       if (plazas >= numPersonas) {
       aDisponibles.add({
         'id': doc.id,
@@ -348,15 +314,14 @@ class FirestoreService {
       crearTrenes();
       crearCochesCiudad();
       crearActividades();
-      _logger.i("Datos inicializados exitosamente");
     } catch (e, stackTrace) {
-      _logger.e("Error al inicializar datos", error: e, stackTrace: stackTrace);
-      throw Exception("No se pudieron inicializar los datos");
-    }
+        _logger.e("Error al inicializar datos", error: e, stackTrace: stackTrace);
+        throw Exception("No se pudieron inicializar los datos");
+      }
   }
 
 
-  // Lógica para reservas
+  //Logica reservas
   static Future<void> crearReserva({
     Map<String, dynamic>? vueloSeleccionado,
     Map<String, dynamic>? hotelSeleccionado,
@@ -367,8 +332,6 @@ class FirestoreService {
   }) async {
     try {
       final reservaRef = _db.collection('reservas').doc();
-
-      // Construir el mapa base de la reserva
       Map<String, dynamic> reservaData = {
         'fecha_reserva': FieldValue.serverTimestamp(),
         'precio_total': _calcularPrecioTotal([
@@ -379,126 +342,133 @@ class FirestoreService {
           actividadSeleccionada,
         ]),
       };
-
-      // Agregar referencias si existen
       if (vueloSeleccionado != null) {
-        reservaData['vuelo'] = _db.doc('vuelos/${vueloSeleccionado['id']}');
+        final vueloRef = _db.collection('vuelos').doc(vueloSeleccionado['id']);
+        reservaData['vuelo'] = vueloRef;
       }
       if (hotelSeleccionado != null) {
-        reservaData['hotel'] = _db.doc('hoteles/${hotelSeleccionado['id']}');
+        final hotelRef = _db.collection('hoteles').doc(hotelSeleccionado['id']);
+        reservaData['hotel'] = hotelRef;
       }
       if (cocheSeleccionado != null) {
         String coleccion = cocheSeleccionado['tipo'] == 'local' ? 'coches_ciudad' : 'coches_ciudades';
-        reservaData['coche'] = _db.doc('$coleccion/${cocheSeleccionado['id']}');
+        final cocheRef = _db.collection(coleccion).doc(cocheSeleccionado['id']);
+        reservaData['coche'] = cocheRef;
       }
       if (trenSeleccionado != null) {
-        reservaData['tren'] = _db.doc('trenes/${trenSeleccionado['id']}');
+        final trenRef = _db.collection('trenes').doc(trenSeleccionado['id']);
+        reservaData['tren'] = trenRef;
       }
       if (actividadSeleccionada != null) {
-        reservaData['actividad'] =
-            _db.doc('actividades/${actividadSeleccionada['id']}');
+        final actividadRef = _db.collection('actividades').doc(actividadSeleccionada['id']);
+        reservaData['actividad'] = actividadRef;
       }
-
-      // Guardar la reserva principal
       await reservaRef.set(reservaData);
 
       // Añadir subcolección 'usuarios'
-      for (var usuario in usuariosControllers) {
-        await reservaRef.collection('usuarios').add({
+      for (int i = 0; i < usuariosControllers.length; i++) {
+        final usuario = usuariosControllers[i];
+        final userData = {
           'nombre': usuario['nombre']?.text ?? '',
           'apellidos': usuario['apellidos']?.text ?? '',
           'dni': usuario['dni']?.text ?? '',
           'edad': int.tryParse(usuario['edad']?.text ?? '0') ?? 0,
           'email': usuario['email']?.text ?? '',
-        });
+        };
+        await reservaRef.collection('usuarios').add(userData);
       }
-
-      _logger.i('✅ Reserva y usuarios creados con éxito');
-    } catch (e) {
-      _logger.e('❌ Error al crear la reserva: $e');
-      rethrow;
-    }
+    } catch (e, stackTrace) {
+        _logger.e('❌ Error al crear la reserva: $e', error: e, stackTrace: stackTrace);
+        rethrow;
+      }
   }
 
   static double _calcularPrecioTotal(List<Map<String, dynamic>?> items) {
-    return items.fold(0.0, (total, item) {
-      final precio = double.tryParse(item?['precio']?.toString() ?? '0') ?? 0.0;
-      return total + precio;
-    });
+    double total = 0.0;
+    for (var item in items) {
+      if (item != null && item['precio'] != null) {
+        final precio = item['precio'];
+        if (precio is num) {
+          total += precio.toDouble();
+          _logger.i('💰 Agregando precio: $precio (total actual: $total)');
+        } else if (precio is String) {
+          final parsedPrice = double.tryParse(precio) ?? 0.0;
+          total += parsedPrice;
+          _logger.i('💰 Agregando precio (string): $precio -> $parsedPrice (total actual: $total)');
+        }
+      }
+    } return total;
   }
 
-  // Método para eliminar una reserva (corregido - ahora estático)
   static Future<void> eliminarReserva(String reservaId) async {
     try {
-      // Referencia al documento específico de la reserva
       final reservaRef = _db.collection('reservas').doc(reservaId);
-
-      // Eliminar el documento de la base de datos
       await reservaRef.delete();
-      _logger.i('Reserva eliminada con éxito');
     } catch (e) {
-      _logger.e('Error al eliminar la reserva: $e');
-    }
+        _logger.e('Error al eliminar la reserva: $e');
+      }
   }
 
-  // Método para actualizar una reserva (corregido - ahora estático)
   static Future<void> actualizarReserva(String reservaId, Map<String, dynamic> reservaData) async {
     try {
-      // Referencia al documento específico de la reserva
       final reservaRef = _db.collection('reservas').doc(reservaId);
-
-      // Actualizar los datos en el documento
       await reservaRef.update(reservaData);
-      _logger.i('Reserva actualizada con éxito');
     } catch (e) {
-      _logger.e('Error al actualizar la reserva: $e');
-    }
+        _logger.e('Error al actualizar la reserva: $e');
+      }
   }
 
   static Stream<List<Map<String, dynamic>>> obtenerReservas() {
-    return _db.collection('reservas').snapshots().asyncMap((snapshot) async {
+    return _db.collection('reservas').snapshots().asyncMap((snapshot) async { 
       final reservas = await Future.wait(snapshot.docs.map((doc) async {
         final data = doc.data();
-        
-        // Resolver cada referencia si existe
         final Map<String, dynamic> reservaData = {
           'id': doc.id,
           'fecha': data['fecha_reserva'],
           'precio_total': data['precio_total'] ?? 0.0,
         };
-
-        // Función auxiliar para resolver referencias
-        Future<Map<String, dynamic>?> resolverReferencia(DocumentReference? ref) async {
-          if (ref == null) return null;
-          final snap = await ref.get();
-          return snap.data() as Map<String, dynamic>?;
+        Future<Map<String, dynamic>?> resolverReferencia(dynamic ref, String tipo) async {
+          try {
+            if (ref == null) {return null;}
+            DocumentReference? docRef;
+            if (ref is DocumentReference) {docRef = ref;}
+            else if (ref is String) {docRef = _db.doc(ref);}
+            else {
+              _logger.w('❌ $tipo tiene tipo desconocido: ${ref.runtimeType}');
+              return null;
+            }
+            final snap = await docRef.get();
+            if (snap.exists) {
+              final result = snap.data() as Map<String, dynamic>?;
+              return result;
+            } else { _logger.w('❌ Documento de $tipo no existe: ${docRef.path}');}
+          } catch (e, stackTrace) {
+              _logger.e('💥 Error resolviendo $tipo: $e', error: e, stackTrace: stackTrace);
+            }return null;
         }
-
-        // Resolver todas las referencias en paralelo
-        final results = await Future.wait([
-          resolverReferencia(data['vuelo'] as DocumentReference?),
-          resolverReferencia(data['hotel'] as DocumentReference?),
-          resolverReferencia(data['coche'] as DocumentReference?),
-          resolverReferencia(data['tren'] as DocumentReference?),
-          resolverReferencia(data['actividad'] as DocumentReference?),
-        ]);
-
+        final vuelo = await resolverReferencia(data['vuelo'], 'vuelo');
+        final hotel = await resolverReferencia(data['hotel'], 'hotel');
+        final coche = await resolverReferencia(data['coche'], 'coche');
+        final tren = await resolverReferencia(data['tren'], 'tren');
+        final actividad = await resolverReferencia(data['actividad'], 'actividad');
         reservaData.addAll({
-          'vuelo': results[0],
-          'hotel': results[1],
-          'coche': results[2],
-          'tren': results[3],
-          'actividad': results[4],
+          'vuelo': vuelo,
+          'hotel': hotel,
+          'coche': coche,
+          'tren': tren,
+          'actividad': actividad,
         });
-
-        // Obtener usuarios
-        final usuariosSnapshot = await doc.reference.collection('usuarios').get();
-        reservaData['usuarios'] = usuariosSnapshot.docs.map((u) => u.data()).toList();
-
-        return reservaData;
+        try {
+          final usuariosSnapshot = await doc.reference.collection('usuarios').get();
+          final usuarios = usuariosSnapshot.docs.map((u) => u.data()).toList();
+          reservaData['usuarios'] = usuarios;
+        } catch (e) {
+          _logger.e('❌ Error obteniendo usuarios: $e');
+          reservaData['usuarios'] = [];
+        } return reservaData;
       }));
-
-      return reservas.where((r) => r != null).cast<Map<String, dynamic>>().toList();
+      final reservasFinales = reservas.where((r) => r != null).cast<Map<String, dynamic>>().toList();
+      return reservasFinales;
     });
   }
 }

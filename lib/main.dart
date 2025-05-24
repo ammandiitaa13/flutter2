@@ -7,7 +7,7 @@ import 'firebase_options.dart';
 import 'firestore_service.dart';
 import 'galeria_screen.dart';
 import 'feedback_screen.dart';
-import 'package:responsive_framework/responsive_framework.dart';
+import 'theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,33 +25,53 @@ class MyApp extends StatelessWidget {
       title: 'TripMap',
       theme: ThemeData(
         primarySwatch: Colors.deepPurple,
-        textTheme: Typography.material2018().black.copyWith(
-          // Definir estilos de texto adaptables
-          bodyLarge: TextStyle(fontSize: 16, fontFamily: 'Roboto'),
-          bodyMedium: TextStyle(fontSize: 14, fontFamily: 'Roboto'),
-          titleLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Roboto'),
+        primaryColor: AppTheme.primaryColor,
+        scaffoldBackgroundColor: AppTheme.backgroundColor,
+        textTheme: const TextTheme(
+          headlineLarge: AppTheme.titleStyle,
+          headlineMedium: AppTheme.subtitleStyle,
+          bodyLarge: AppTheme.bodyStyle,
+          bodyMedium: AppTheme.bodyStyle,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: AppTheme.buttonStyle,
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          border: AppTheme.inputDecoration.border,
+          focusedBorder: AppTheme.inputDecoration.focusedBorder,
+          enabledBorder: AppTheme.inputDecoration.border,
         ),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
           backgroundColor: Colors.white,
-          selectedItemColor: Colors.deepPurple,
-          unselectedItemColor: Colors.grey,
+          selectedItemColor: AppTheme.primaryColor,
+          unselectedItemColor: AppTheme.secondaryColor,
+          type: BottomNavigationBarType.fixed,
+          elevation: 8,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: AppTheme.primaryColor,
+          foregroundColor: Colors.white,
+          elevation: 4,
+          titleTextStyle: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        cardTheme: CardTheme(
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          margin: const EdgeInsets.all(8),
+        ),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppTheme.primaryColor,
+          brightness: Brightness.light,
+        ).copyWith(
+          surface: Colors.white,
         ),
       ),
-      builder: (context, child) {
-        return MediaQuery(
-          // Establece un límite de escala de texto para evitar textos demasiado grandes
-          data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(MediaQuery.of(context).textScaleFactor.clamp(0.8, 1.3))),
-          child: ResponsiveBreakpoints.builder(
-            child: child!,
-            breakpoints: [
-              const Breakpoint(start: 0, end: 450, name: MOBILE),
-              const Breakpoint(start: 451, end: 800, name: TABLET),
-              const Breakpoint(start: 801, end: 1920, name: DESKTOP),
-              const Breakpoint(start: 1921, end: double.infinity, name: '4K'),
-            ],
-          ),
-        );
-      },
       home: const BottomNavController(),
     );
   }
@@ -69,30 +89,118 @@ class BottomNavControllerState extends State<BottomNavController> {
 
   @override
   Widget build(BuildContext context) {
+    // Obtener información sobre el tamaño de pantalla
+    final isTablet = AppTheme.isTablet(context);
+    final isDesktop = AppTheme.isDesktop(context);
+
     return Scaffold(
-      body: IndexedStack(
-        index: _index,
+      body: _buildBody(isTablet, isDesktop),
+      bottomNavigationBar: _buildBottomNavigation(isTablet),
+    );
+  }
+
+  Widget _buildBody(bool isTablet, bool isDesktop) {
+    if (AppTheme.isDesktop(context)) {
+      // Layout para desktop con navegación lateral
+      return Row(
         children: [
-          const KeyedSubtree(key: ValueKey('HomePage'), child: HomeScreen()),
-          const KeyedSubtree(key: ValueKey('ReservasPage'), child: ReservasScreen()),
-          const KeyedSubtree(key: ValueKey('WeatherPage'), child: WeatherTableScreen()),
-          const KeyedSubtree(key: ValueKey('GaleriaPage'), child: CrossPlatformImagePicker()),
-          const KeyedSubtree(key: ValueKey('FeedbackPage'), child: FeedbackScreen()),
+          NavigationRail(
+            selectedIndex: _index,
+            onDestinationSelected: (i) => setState(() => _index = i),
+            labelType: NavigationRailLabelType.all,
+            backgroundColor: Colors.white,
+            selectedIconTheme: const IconThemeData(color: AppTheme.primaryColor),
+            selectedLabelTextStyle: const TextStyle(color: AppTheme.primaryColor),
+            destinations: const [
+              NavigationRailDestination(
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home),
+                label: Text('Inicio'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.list_outlined),
+                selectedIcon: Icon(Icons.list),
+                label: Text('Reservas'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.cloud_outlined),
+                selectedIcon: Icon(Icons.cloud),
+                label: Text('Clima'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.photo_outlined),
+                selectedIcon: Icon(Icons.photo),
+                label: Text('Galería'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.feedback_outlined),
+                selectedIcon: Icon(Icons.feedback),
+                label: Text('Feedback'),
+              ),
+            ],
+          ),
+          const VerticalDivider(thickness: 1, width: 1),
+          Expanded(
+            child: _buildIndexedStack(),
+          ),
         ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _index,
-        onTap: (i) {
-          setState(() => _index = i);
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Inicio'),
-          BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Reservas'),
-          BottomNavigationBarItem(icon: Icon(Icons.cloud), label: 'Clima'),
-          BottomNavigationBarItem(icon: Icon(Icons.photo), label: 'Galería'),
-          BottomNavigationBarItem(icon: Icon(Icons.feedback), label: 'Feedback'),
-        ],
-      ),
+      );
+    } else {
+      // Layout normal para móvil y tablet
+      return _buildIndexedStack();
+    }
+  }
+
+  Widget _buildIndexedStack() {
+    return IndexedStack(
+      index: _index,
+      children: const [
+        KeyedSubtree(key: ValueKey('HomePage'), child: HomeScreen()),
+        KeyedSubtree(key: ValueKey('ReservasPage'), child: ReservasScreen()),
+        KeyedSubtree(key: ValueKey('WeatherPage'), child: WeatherTableScreen()),
+        KeyedSubtree(key: ValueKey('GaleriaPage'), child: CrossPlatformImagePicker()),
+        KeyedSubtree(key: ValueKey('FeedbackPage'), child: FeedbackScreen()),
+      ],
+    );
+  }
+
+  Widget? _buildBottomNavigation(bool isTablet) {
+    // En desktop no mostramos bottom navigation
+    if (AppTheme.isDesktop(context)) {
+      return null;
+    }
+
+    return BottomNavigationBar(
+      currentIndex: _index,
+      onTap: (i) => setState(() => _index = i),
+      type: BottomNavigationBarType.fixed,
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home_outlined),
+          activeIcon: Icon(Icons.home),
+          label: 'Inicio',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.list_outlined),
+          activeIcon: Icon(Icons.list),
+          label: 'Reservas',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.cloud_outlined),
+          activeIcon: Icon(Icons.cloud),
+          label: 'Clima',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.photo_outlined),
+          activeIcon: Icon(Icons.photo),
+          label: 'Galería',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.feedback_outlined),
+          activeIcon: Icon(Icons.feedback),
+          label: 'Feedback',
+        ),
+      ],
     );
   }
 }

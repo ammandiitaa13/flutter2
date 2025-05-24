@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'firestore_service.dart';
 import 'reserva_form_screen.dart';
 import 'package:logger/logger.dart';
-import 'package:responsive_framework/responsive_framework.dart';
+import 'theme.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -29,14 +29,14 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Colors.deepPurple,
+            colorScheme: ColorScheme.light(
+              primary: AppTheme.primaryColor,
               onPrimary: Colors.white,
-              onSurface: Colors.black,
+              onSurface: AppTheme.textColor,
             ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                foregroundColor: Colors.deepPurple,
+                foregroundColor: AppTheme.primaryColor,
               ),
             ),
           ),
@@ -134,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(mensaje),
-        backgroundColor: Colors.deepPurple.shade300,
+        backgroundColor: AppTheme.primaryColor.withOpacity(0.8),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
@@ -143,65 +143,31 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  InputDecoration _inputDecoration(String label, IconData icon) {
-    return InputDecoration(
-      prefixIcon: Icon(icon, color: Colors.deepPurple),
-      labelText: label,
-      labelStyle: const TextStyle(color: Colors.deepPurple),
-      filled: true,
-      fillColor: Colors.white,
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: Colors.deepPurple.shade200),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Colors.deepPurple, width: 2),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Colors.red, width: 1),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Colors.red, width: 2),
-      ),
-    );
-  }
-
-  Widget _formField({
+  Widget _buildFormField({
     required String label,
     required IconData icon,
-    TextEditingController? controller,
+    required TextEditingController controller,
     TextInputType? inputType,
     VoidCallback? onTap,
     String? value,
     bool readOnly = false,
   }) {
-    final height = MediaQuery.of(context).size.height * 0.075;
-    final bottomMargin = MediaQuery.of(context).size.height * 0.02;
-  
     return Container(
-      height: height,
-      margin: EdgeInsets.only(bottom: bottomMargin),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      margin: EdgeInsets.only(bottom: AppTheme.getSpacing(context, mobile: 16, tablet: 20, desktop: 24)),
       child: TextField(
         controller: controller,
         keyboardType: inputType,
         readOnly: readOnly,
         onTap: onTap,
-        style: TextStyle(fontSize: MediaQuery.of(context).size.width * 0.04),
-        decoration: _inputDecoration(label, icon).copyWith(
-          hintText: value,
+        style: TextStyle(
+          fontSize: AppTheme.getFontSize(context, mobile: 16, tablet: 18, desktop: 20),
+        ),
+        decoration: AppTheme.getInputDecoration(
+          context,
+          label: Text(label), // Usar Text widget para el label
+          hintText: value ?? (readOnly ? controller.text : null), // Mostrar valor si es readOnly y no hay hint específico
+        ).copyWith(
+          prefixIcon: Icon(icon, color: AppTheme.primaryColor),
         ),
       ),
     );
@@ -209,26 +175,28 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Inicializar el controlador para el campo de fecha si es necesario
+    // Esto es para que _buildFormField pueda tener un controller no nulo.
+    final TextEditingController fechaController = TextEditingController(text: fechaSeleccionada != null ? DateFormat('dd/MM/yyyy').format(fechaSeleccionada!) : 'Seleccionar fecha');
+
     final formatter = DateFormat('dd/MM/yyyy');
-    final isTablet = ResponsiveBreakpoints.of(context).isTablet;
-    final screenSize = MediaQuery.of(context).size;
-    final titleSize = screenSize.width * 0.05;
-    final subtitleSize = screenSize.width * 0.04;
-    final buttonPadding = screenSize.height * 0.015;
+    final titleSize = AppTheme.getFontSize(context, mobile: 22, tablet: 26, desktop: 30);
+    final subtitleSize = AppTheme.getFontSize(context, mobile: 20, tablet: 24, desktop: 28);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: FittedBox (
+        title: FittedBox(
           fit: BoxFit.scaleDown,
-          child: Text ('Planifica tu viaje',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            fontSize: titleSize,
+          child: Text(
+            'Planifica tu viaje',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontSize: titleSize,
+            ),
           ),
         ),
-        ), 
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
@@ -241,83 +209,82 @@ class _HomeScreenState extends State<HomeScreen> {
             end: Alignment.bottomRight,
           ),
         ),
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: isTablet ? 600 : screenSize.width,
-              ),
+        child: SafeArea(
+          child: AppTheme.centerContent(
+            context: context,
+            child: SingleChildScrollView(
+              padding: AppTheme.getPadding(context),
               child: Card(
                 elevation: 10,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Container(
+                  padding: AppTheme.getPadding(context),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.public,
-                        size: 60,
-                        color: Colors.deepPurple,
+                        size: AppTheme.isDesktop(context) ? 80 : AppTheme.isTablet(context) ? 70 : 60,
+                        color: AppTheme.primaryColor,
                       ),
-                      const SizedBox(height: 16),
-                      const Text(
+                      SizedBox(height: AppTheme.getSpacing(context, mobile: 16, tablet: 20, desktop: 24)),
+                      Text(
                         '¿A dónde quieres ir?',
                         style: TextStyle(
-                          fontSize: 24,
+                          fontSize: subtitleSize,
                           fontWeight: FontWeight.bold,
-                          color: Colors.deepPurple,
+                          color: AppTheme.primaryColor,
                         ),
                       ),
-                      const SizedBox(height: 32),
-                      _formField(
+                      SizedBox(height: AppTheme.getSpacing(context, mobile: 24, tablet: 32, desktop: 40)),
+                      _buildFormField(
                         label: 'Origen',
                         icon: Icons.place,
                         controller: origenController,
                       ),
-                      _formField(
+                      _buildFormField(
                         label: 'Destino',
                         icon: Icons.explore,
                         controller: destinoController,
                       ),
-                      _formField(
+                      _buildFormField(
                         label: 'Número de personas',
                         icon: Icons.people,
                         controller: numPersonasController,
                         inputType: TextInputType.number,
                       ),
-                      _formField(
+                      _buildFormField(
                         label: 'Fecha de viaje',
                         icon: Icons.calendar_today,
                         readOnly: true,
+                        controller: fechaController, // Pasar el controlador
                         onTap: () => _seleccionarFecha(context),
-                        value: fechaSeleccionada != null
-                            ? formatter.format(fechaSeleccionada!)
-                            : 'Seleccionar fecha',
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: AppTheme.getSpacing(context, mobile: 16, tablet: 20, desktop: 24)),
                       AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
-                        width: isTablet ? 300 : double.infinity,
-                        height: 55,
+                        width: AppTheme.isDesktop(context) ? 400 : double.infinity,
+                        height: AppTheme.isDesktop(context) ? 60 : 55,
                         child: ElevatedButton(
                           onPressed: _isLoading ? null : _buscarDisponibilidad,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.deepPurple,
-                            foregroundColor: Colors.white,
-                            disabledBackgroundColor: Colors.grey.shade400,
-                            elevation: 5,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            textStyle: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                          style: AppTheme.getButtonStyle(context).copyWith(
+                            backgroundColor: WidgetStateProperty.resolveWith((states) {
+                              if (states.contains(WidgetState.disabled)) {
+                                return Colors.grey.shade400;
+                              }
+                              return AppTheme.primaryColor;
+                            }),
+                            elevation: WidgetStateProperty.all(5),
+                            shape: WidgetStateProperty.all(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
                             ),
                           ),
                           child: _isLoading
-                              ? const SizedBox(
+                              ? SizedBox(
                                   height: 24,
                                   width: 24,
                                   child: CircularProgressIndicator(
@@ -325,7 +292,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : const Text('Buscar disponibilidad'),
+                              : FittedBox( // Asegura que el texto quepa en el botón
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    'Buscar disponibilidad',
+                                    style: TextStyle(
+                                      fontSize: AppTheme.getFontSize(context, mobile: 16, tablet: 18, desktop: 20),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
                         ),
                       ),
                     ],

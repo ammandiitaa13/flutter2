@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:responsive_framework/responsive_framework.dart';
 import 'firestore_service.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'theme.dart';
+import 'package:logger/logger.dart';
 
 class ReservasScreen extends StatefulWidget {
   const ReservasScreen({super.key});
@@ -23,7 +24,7 @@ class _ReservasScreenState extends State<ReservasScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Reserva eliminada con éxito'),
-          backgroundColor: Colors.deepPurple.shade300,
+          backgroundColor: AppTheme.primaryColor.withOpacity(0.8),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -35,7 +36,7 @@ class _ReservasScreenState extends State<ReservasScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error al eliminar la reserva: $e'),
-          backgroundColor: Colors.red.shade400,
+          backgroundColor: Theme.of(context).colorScheme.error,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -50,10 +51,10 @@ class _ReservasScreenState extends State<ReservasScreen> {
       context: context,
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppTheme.getSpacing(context, desktop: 24, tablet: 20, mobile: 16)),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: EdgeInsets.all(AppTheme.getSpacing(context, desktop: 24, tablet: 20, mobile: 16)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -62,36 +63,35 @@ class _ReservasScreenState extends State<ReservasScreen> {
                 color: Colors.amber,
                 size: 64,
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: AppTheme.getSpacing(context)),
               Text(
                 '¿Eliminar reserva?',
-                style: TextStyle(
-                  fontSize: 22,
+                style: AppTheme.subtitleStyle.copyWith(
+                  color: AppTheme.primaryColor,
+                  fontSize: AppTheme.getFontSize(context, mobile: 20, tablet: 22),
                   fontWeight: FontWeight.bold,
-                  color: Colors.deepPurple.shade700,
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: AppTheme.getSpacing(context, mobile: 8, tablet: 10)),
               Text(
                 'Estás a punto de eliminar "$titulo". Esta acción no se puede deshacer.',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey.shade700,
+                style: AppTheme.bodyStyle.copyWith(
+                  color: AppTheme.secondaryColor,
                 ),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: AppTheme.getSpacing(context, mobile: 24, tablet: 28)),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   OutlinedButton(
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.deepPurple,
-                      side: const BorderSide(color: Colors.deepPurple),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      foregroundColor: AppTheme.primaryColor,
+                      side: const BorderSide(color: AppTheme.primaryColor),
+                      padding: EdgeInsets.symmetric(horizontal: AppTheme.getSpacing(context, mobile: 20), vertical: AppTheme.getSpacing(context, mobile: 12)),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.getSpacing(context, mobile: 12)),
                       ),
                     ),
                     child: const Text('Cancelar'),
@@ -102,11 +102,11 @@ class _ReservasScreenState extends State<ReservasScreen> {
                       Navigator.pop(context);
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
+                      backgroundColor: Theme.of(context).colorScheme.error,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      padding: EdgeInsets.symmetric(horizontal: AppTheme.getSpacing(context, mobile: 20), vertical: AppTheme.getSpacing(context, mobile: 12)),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.getSpacing(context, mobile: 12)),
                       ),
                     ),
                     child: const Text('Eliminar'),
@@ -120,25 +120,40 @@ class _ReservasScreenState extends State<ReservasScreen> {
     );
   }
 
-  String _formatearFecha(Timestamp timestamp) {
-    return DateFormat('dd/MM/yyyy HH:mm').format(timestamp.toDate());
+  String _formatearFecha(dynamic fecha) {
+    var logger = Logger();
+    if (fecha == null) return 'Fecha no disponible';
+    
+    try {
+      if (fecha is Timestamp) {
+        return DateFormat('dd/MM/yyyy HH:mm').format(fecha.toDate());
+      } else if (fecha is DateTime) {
+        return DateFormat('dd/MM/yyyy HH:mm').format(fecha);
+      } else if (fecha is String) {
+        final parsedDate = DateTime.tryParse(fecha);
+        if (parsedDate != null) {
+          return DateFormat('dd/MM/yyyy HH:mm').format(parsedDate);
+        }
+      }
+    } catch (e) {
+      logger.e('Error formateando fecha: $e');
+    }
+    
+    return 'Fecha no disponible';
   }
 
   @override
   Widget build(BuildContext context) {
-    final isTabletOrLarger = ResponsiveBreakpoints.of(context).largerThan(MOBILE);
-    final double horizontalPadding = isTabletOrLarger ? 24 : 16;
-    final double maxCardWidth = isTabletOrLarger ? 800 : double.infinity;
+    final isTabletOrLarger = AppTheme.isTablet(context) || AppTheme.isDesktop(context);
+    final double horizontalPadding = AppTheme.getSpacing(context, mobile: 16, tablet: 24, desktop: 32);
+    final double maxCardWidth = AppTheme.getMaxWidth(context);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Mis Reservas',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+          style: AppTheme.titleStyle.copyWith(color: Colors.white, fontSize: AppTheme.getFontSize(context, mobile: 20, tablet: 22, desktop: 24)),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -171,20 +186,17 @@ class _ReservasScreenState extends State<ReservasScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.error_outline, size: 64, color: Colors.white.withOpacity(0.8)),
-                      const SizedBox(height: 16),
+                      SizedBox(height: AppTheme.getSpacing(context)),
                       Text(
                         'Error al cargar los datos',
-                        style: TextStyle(
-                          fontSize: 20,
+                        style: AppTheme.subtitleStyle.copyWith(
                           color: Colors.white.withOpacity(0.9),
-                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: AppTheme.getSpacing(context, mobile: 8)),
                       Text(
                         '${snapshot.error}',
-                        style: TextStyle(
-                          fontSize: 16,
+                        style: AppTheme.bodyStyle.copyWith(
                           color: Colors.white.withOpacity(0.7),
                         ),
                         textAlign: TextAlign.center,
@@ -200,20 +212,17 @@ class _ReservasScreenState extends State<ReservasScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.search_off, size: 80, color: Colors.white.withOpacity(0.8)),
-                      const SizedBox(height: 16),
+                      SizedBox(height: AppTheme.getSpacing(context)),
                       Text(
                         'No tienes reservas',
-                        style: TextStyle(
-                          fontSize: 22,
+                        style: AppTheme.subtitleStyle.copyWith(
                           color: Colors.white.withOpacity(0.9),
-                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: AppTheme.getSpacing(context, mobile: 8)),
                       Text(
                         'Tus futuras reservas aparecerán aquí',
-                        style: TextStyle(
-                          fontSize: 16,
+                        style: AppTheme.bodyStyle.copyWith(
                           color: Colors.white.withOpacity(0.7),
                         ),
                       ),
@@ -225,41 +234,43 @@ class _ReservasScreenState extends State<ReservasScreen> {
               final reservas = snapshot.data!;
 
               return ListView.builder(
-                padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 16),
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: AppTheme.getSpacing(context)),
                 itemCount: reservas.length,
                 itemBuilder: (context, index) {
                   final reserva = reservas[index];
+                  
+                  // Las referencias ya están resueltas por el servicio
                   final String tituloReserva = _obtenerTituloReserva(reserva, index);
-                  final total = reserva['precio_total'] ?? 0;
+                  final total = _obtenerTotal(reserva);
 
                   return Center(
                     child: Container(
                       constraints: BoxConstraints(maxWidth: maxCardWidth),
-                      margin: const EdgeInsets.only(bottom: 16),
+                      margin: EdgeInsets.only(bottom: AppTheme.getSpacing(context)),
                       child: Card(
                         elevation: 4,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(AppTheme.getSpacing(context, mobile: 16, tablet: 20, desktop: 24)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _buildReservaHeader(tituloReserva, total, reserva['fecha']),
-                            Divider(color: Colors.deepPurple.withOpacity(0.2), thickness: 1),
+                            Divider(color: AppTheme.primaryColor.withOpacity(0.2), thickness: 1),
                             Padding(
-                              padding: const EdgeInsets.all(16),
+                              padding: EdgeInsets.all(AppTheme.getSpacing(context)),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   // Servicios contratados
                                   _buildServiciosContratados(reserva),
 
-                                  const SizedBox(height: 16),
+                                  SizedBox(height: AppTheme.getSpacing(context)),
                                   
                                   // Información de personas
                                   _buildInfoPersonas(reserva),
 
-                                  const SizedBox(height: 24),
+                                  SizedBox(height: AppTheme.getSpacing(context, mobile: 24, tablet: 28)),
                                   
                                   // Botones de acción
                                   Row(
@@ -270,12 +281,12 @@ class _ReservasScreenState extends State<ReservasScreen> {
                                         icon: const Icon(Icons.delete),
                                         label: const Text('Eliminar'),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.red,
+                                          backgroundColor: Theme.of(context).colorScheme.error,
                                           foregroundColor: Colors.white,
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius: BorderRadius.circular(AppTheme.getSpacing(context, mobile: 12)),
                                           ),
-                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                          padding: EdgeInsets.symmetric(horizontal: AppTheme.getSpacing(context, mobile: 16), vertical: AppTheme.getSpacing(context, mobile: 12)),
                                         ),
                                       ),
                                     ],
@@ -298,29 +309,75 @@ class _ReservasScreenState extends State<ReservasScreen> {
   }
 
   String _obtenerTituloReserva(Map<String, dynamic> reserva, int index) {
-    if (reserva['vuelo'] != null) {
-      return 'Viaje a ${reserva['vuelo']['destino']}';
-    } else if (reserva['hotel'] != null) {
-      return 'Estancia en ${reserva['hotel']['nombre']}';
-    } else if (reserva['actividad'] != null) {
-      return reserva['actividad']['nombre'];
-    } else if (reserva['tren'] != null) {
-      return 'Viaje en tren a ${reserva['tren']['destino']}';
-    } else if (reserva['coche'] != null) {
-      return 'Alquiler de ${reserva['coche']['modelo']}';
-    } else {
-      return 'Reserva ${index + 1}';
+    try {
+      // Verificar vuelo
+      if (reserva['vuelo'] != null && reserva['vuelo'] is Map) {
+        final vuelo = reserva['vuelo'] as Map<String, dynamic>;
+        if (vuelo['destino'] != null && vuelo['destino'].toString().isNotEmpty) {
+          return 'Viaje a ${vuelo['destino']}';
+        }
+      }
+      
+      // Verificar hotel
+      if (reserva['hotel'] != null && reserva['hotel'] is Map) {
+        final hotel = reserva['hotel'] as Map<String, dynamic>;
+        if (hotel['nombre'] != null && hotel['nombre'].toString().isNotEmpty) {
+          return 'Estancia en ${hotel['nombre']}';
+        }
+      }
+      
+      // Verificar actividad
+      if (reserva['actividad'] != null && reserva['actividad'] is Map) {
+        final actividad = reserva['actividad'] as Map<String, dynamic>;
+        if (actividad['nombre'] != null && actividad['nombre'].toString().isNotEmpty) {
+          return actividad['nombre'];
+        }
+      }
+      
+      // Verificar tren
+      if (reserva['tren'] != null && reserva['tren'] is Map) {
+        final tren = reserva['tren'] as Map<String, dynamic>;
+        if (tren['destino'] != null && tren['destino'].toString().isNotEmpty) {
+          return 'Viaje en tren a ${tren['destino']}';
+        }
+      }
+      
+      // Verificar coche
+      if (reserva['coche'] != null && reserva['coche'] is Map) {
+        final coche = reserva['coche'] as Map<String, dynamic>;
+        if (coche['modelo'] != null && coche['modelo'].toString().isNotEmpty) {
+          return 'Alquiler de ${coche['modelo']}';
+        }
+      }
+    } catch (e) {
+      print('Error obteniendo título de reserva: $e');
     }
+    
+    return 'Reserva ${index + 1}';
   }
 
-  Widget _buildReservaHeader(String titulo, dynamic total, Timestamp? fecha) {
+  double _obtenerTotal(Map<String, dynamic> reserva) {
+    try {
+      final precioTotal = reserva['precio_total'];
+      if (precioTotal is num) {
+        return precioTotal.toDouble();
+      } else if (precioTotal is String) {
+        return double.tryParse(precioTotal) ?? 0.0;
+      }
+    } catch (e) {
+      print('Error obteniendo total: $e');
+    }
+    return 0.0;
+  }
+
+  Widget _buildReservaHeader(String titulo, double total, dynamic fecha) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppTheme.getSpacing(context)),
       decoration: BoxDecoration(
-        color: Colors.deepPurple.shade50,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
+        color: AppTheme.primaryColor.withOpacity(0.05),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(AppTheme.getSpacing(context, mobile: 16, tablet: 20, desktop: 24)),
+          topRight: Radius.circular(AppTheme.getSpacing(context, mobile: 16, tablet: 20, desktop: 24)),
         ),
       ),
       child: Column(
@@ -332,27 +389,27 @@ class _ReservasScreenState extends State<ReservasScreen> {
               Expanded(
                 child: Text(
                   titulo,
-                  style: TextStyle(
-                    fontSize: 22,
+                  style: AppTheme.subtitleStyle.copyWith(
+                    color: AppTheme.primaryColor,
+                    fontSize: AppTheme.getFontSize(context, mobile: 20, tablet: 22),
                     fontWeight: FontWeight.bold,
-                    color: Colors.deepPurple.shade800,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: EdgeInsets.symmetric(horizontal: AppTheme.getSpacing(context, mobile: 16), vertical: AppTheme.getSpacing(context, mobile: 8)),
                 decoration: BoxDecoration(
-                  color: Colors.deepPurple.shade700,
-                  borderRadius: BorderRadius.circular(16),
+                  color: AppTheme.primaryColor,
+                  borderRadius: BorderRadius.circular(AppTheme.getSpacing(context, mobile: 16)),
                 ),
                 child: Text(
-                  '$total€',
-                  style: const TextStyle(
+                  '${total.toStringAsFixed(2)}€',
+                  style: AppTheme.bodyStyle.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    fontSize: 18,
+                    fontSize: AppTheme.getFontSize(context, mobile: 16, tablet: 18),
                   ),
                 ),
               ),
@@ -360,16 +417,18 @@ class _ReservasScreenState extends State<ReservasScreen> {
           ),
           if (fecha != null)
             Padding(
-              padding: const EdgeInsets.only(top: 8),
+              padding: EdgeInsets.only(top: AppTheme.getSpacing(context, mobile: 8)),
               child: Row(
                 children: [
-                  Icon(Icons.calendar_today, size: 16, color: Colors.deepPurple.shade400),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Reservado el ${_formatearFecha(fecha)}',
-                    style: TextStyle(
-                      color: Colors.deepPurple.shade600,
-                      fontSize: 14,
+                  Icon(Icons.calendar_today, size: 16, color: AppTheme.primaryColor.withOpacity(0.7)),
+                  SizedBox(width: AppTheme.getSpacing(context, mobile: 8)),
+                  Expanded( // Allow text to wrap or take available space
+                    child: Text(
+                      'Reservado el ${_formatearFecha(fecha)}',
+                      style: AppTheme.captionStyle.copyWith( // Use theme style
+                        color: AppTheme.primaryColor.withOpacity(0.9),
+                        fontSize: AppTheme.getFontSize(context, mobile: 13, tablet: 14), // Responsive font size
+                      ),
                     ),
                   ),
                 ],
@@ -381,60 +440,138 @@ class _ReservasScreenState extends State<ReservasScreen> {
   }
 
   Widget _buildServiciosContratados(Map<String, dynamic> reserva) {
+    List<Widget> servicios = [];
+    
+    try {
+      // Verificar vuelo
+      if (reserva['vuelo'] != null && reserva['vuelo'] is Map) {
+        final vuelo = reserva['vuelo'] as Map<String, dynamic>;
+        if (vuelo.isNotEmpty) {
+          servicios.add(_buildServicioCard(
+            icon: Icons.flight,
+            title: 'Vuelo',
+            detail: '${vuelo['origen'] ?? 'N/A'} → ${vuelo['destino'] ?? 'N/A'}',
+            company: vuelo['compania']?.toString() ?? 'N/A',
+            price: _formatearPrecio(vuelo['precio']),
+          ));
+        }
+      }
+      
+      // Verificar hotel
+      if (reserva['hotel'] != null && reserva['hotel'] is Map) {
+        final hotel = reserva['hotel'] as Map<String, dynamic>;
+        if (hotel.isNotEmpty) {
+          servicios.add(_buildServicioCard(
+            icon: Icons.hotel,
+            title: 'Alojamiento',
+            detail: hotel['nombre']?.toString() ?? 'N/A',
+            company: 'Ciudad: ${hotel['ciudad']?.toString() ?? 'N/A'}',
+            price: _formatearPrecio(hotel['precio']),
+          ));
+        }
+      }
+      
+      // Verificar coche
+      if (reserva['coche'] != null && reserva['coche'] is Map) {
+        final coche = reserva['coche'] as Map<String, dynamic>;
+        if (coche.isNotEmpty) {
+          servicios.add(_buildServicioCard(
+            icon: Icons.directions_car,
+            title: 'Alquiler de coche',
+            detail: coche['modelo']?.toString() ?? 'N/A',
+            company: coche['empresa']?.toString() ?? 'N/A',
+            price: _formatearPrecio(coche['precio']),
+          ));
+        }
+      }
+      
+      // Verificar tren
+      if (reserva['tren'] != null && reserva['tren'] is Map) {
+        final tren = reserva['tren'] as Map<String, dynamic>;
+        if (tren.isNotEmpty) {
+          servicios.add(_buildServicioCard(
+            icon: Icons.train,
+            title: 'Tren',
+            detail: '${tren['origen'] ?? 'N/A'} → ${tren['destino'] ?? 'N/A'}',
+            company: tren['compania']?.toString() ?? 'N/A',
+            price: _formatearPrecio(tren['precio']),
+          ));
+        }
+      }
+      
+      // Verificar actividad
+      if (reserva['actividad'] != null && reserva['actividad'] is Map) {
+        final actividad = reserva['actividad'] as Map<String, dynamic>;
+        if (actividad.isNotEmpty) {
+          servicios.add(_buildServicioCard(
+            icon: Icons.attractions,
+            title: 'Actividad',
+            detail: actividad['nombre']?.toString() ?? 'N/A',
+            company: actividad['descripcion']?.toString() ?? 'N/A',
+            price: _formatearPrecio(actividad['precio']),
+          ));
+        }
+      }
+    } catch (e) {
+      print('Error construyendo servicios: $e');
+    }
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Servicios contratados',
-          style: TextStyle(
-            fontSize: 18,
+          style: AppTheme.subtitleStyle.copyWith(
+            color: AppTheme.primaryColor,
+            fontSize: AppTheme.getFontSize(context, mobile: 18),
             fontWeight: FontWeight.bold,
-            color: Colors.deepPurple.shade700,
           ),
         ),
-        const SizedBox(height: 12),
-        if (reserva['vuelo'] != null)
-          _buildServicioCard(
-            icon: Icons.flight,
-            title: 'Vuelo',
-            detail: '${reserva['vuelo']['origen']} → ${reserva['vuelo']['destino']}',
-            company: reserva['vuelo']['compania'],
-            price: reserva['vuelo']['precio'],
-          ),
-        if (reserva['hotel'] != null)
-          _buildServicioCard(
-            icon: Icons.hotel,
-            title: 'Alojamiento',
-            detail: reserva['hotel']['nombre'],
-            company: 'Ciudad: ${reserva['hotel']['ciudad']}',
-            price: reserva['hotel']['precio'],
-          ),
-        if (reserva['coche'] != null)
-          _buildServicioCard(
-            icon: Icons.directions_car,
-            title: 'Alquiler de coche',
-            detail: reserva['coche']['modelo'],
-            company: reserva['coche']['empresa'],
-            price: reserva['coche']['precio'],
-          ),
-        if (reserva['tren'] != null)
-          _buildServicioCard(
-            icon: Icons.train,
-            title: 'Tren',
-            detail: '${reserva['tren']['origen']} → ${reserva['tren']['destino']}',
-            company: reserva['tren']['compania'],
-            price: reserva['tren']['precio'],
-          ),
-        if (reserva['actividad'] != null)
-          _buildServicioCard(
-            icon: Icons.attractions,
-            title: 'Actividad',
-            detail: reserva['actividad']['nombre'],
-            company: reserva['actividad']['descripcion'] ?? '',
-            price: reserva['actividad']['precio'],
-          ),
+        SizedBox(height: AppTheme.getSpacing(context, mobile: 12)),
+        if (servicios.isEmpty)
+          Container(
+            padding: EdgeInsets.all(AppTheme.getSpacing(context)),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest, // Using a theme color for warning background
+              borderRadius: BorderRadius.circular(AppTheme.getSpacing(context, mobile: 12)),
+              border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.warning_amber_rounded, color: Colors.amber), // Using a consistent warning icon color
+                SizedBox(width: AppTheme.getSpacing(context, mobile: 12)),
+                Expanded(
+                  child: Text(
+                    'No se pudieron cargar los servicios contratados',
+                    style: AppTheme.bodyStyle.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant, // Using a theme color for warning text
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          ...servicios,
       ],
     );
+  }
+
+  String _formatearPrecio(dynamic precio) {
+    try {
+      if (precio is num) {
+        return precio.toStringAsFixed(2);
+      } else if (precio is String) {
+        final parsed = double.tryParse(precio);
+        if (parsed != null) {
+          return parsed.toStringAsFixed(2);
+        }
+      }
+    } catch (e) {
+      print('Error formateando precio: $e');
+    }
+    return '0.00';
   }
 
   Widget _buildServicioCard({
@@ -442,18 +579,18 @@ class _ReservasScreenState extends State<ReservasScreen> {
     required String title,
     required String detail,
     required String company,
-    required dynamic price,
+    required String price,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      margin: EdgeInsets.only(bottom: AppTheme.getSpacing(context, mobile: 12)),
+      padding: EdgeInsets.all(AppTheme.getSpacing(context)),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: AppTheme.cardColor,
+        borderRadius: BorderRadius.circular(AppTheme.getSpacing(context, mobile: 16)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 5,
+            blurRadius: 4, // Consistent with AppTheme.boxDecoration
             offset: const Offset(0, 2),
           ),
         ],
@@ -462,50 +599,50 @@ class _ReservasScreenState extends State<ReservasScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: EdgeInsets.all(AppTheme.getSpacing(context, mobile: 10)),
             decoration: BoxDecoration(
-              color: Colors.deepPurple.shade50,
-              borderRadius: BorderRadius.circular(12),
+              color: AppTheme.primaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(AppTheme.getSpacing(context, mobile: 12)),
             ),
             child: Icon(
               icon,
-              color: Colors.deepPurple,
+              color: AppTheme.primaryColor,
               size: 24,
             ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: AppTheme.getSpacing(context)),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: TextStyle(
-                    fontSize: 16,
+                  style: AppTheme.bodyStyle.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Colors.deepPurple.shade800,
+                    color: AppTheme.primaryColor,
+                    fontSize: AppTheme.getFontSize(context, mobile: 16)
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: AppTheme.getSpacing(context, mobile: 4)),
                 Text(
                   detail,
-                  style: const TextStyle(fontSize: 15),
+                  style: AppTheme.bodyStyle.copyWith(fontSize: AppTheme.getFontSize(context, mobile: 15)),
                 ),
                 Text(
                   company,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade700,
+                  style: AppTheme.captionStyle.copyWith(
+                    color: AppTheme.secondaryColor,
+                     fontSize: AppTheme.getFontSize(context, mobile: 14)
                   ),
                 ),
               ],
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: EdgeInsets.symmetric(horizontal: AppTheme.getSpacing(context, mobile: 12), vertical: AppTheme.getSpacing(context, mobile: 6)),
             decoration: BoxDecoration(
-              color: Colors.green.shade50,
-              borderRadius: BorderRadius.circular(12),
+              color: Colors.green.shade50, // Keeping specific color for price indication
+              borderRadius: BorderRadius.circular(AppTheme.getSpacing(context, mobile: 12)),
               border: Border.all(color: Colors.green.shade200),
             ),
             child: Text(
@@ -522,122 +659,149 @@ class _ReservasScreenState extends State<ReservasScreen> {
   }
 
   Widget _buildInfoPersonas(Map<String, dynamic> reserva) {
-    final usuarios = reserva['usuarios'] as List?;
-    
-    if (usuarios == null || usuarios.isEmpty) {
-      return Container();
-    }
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Pasajeros',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.deepPurple.shade700,
+    try {
+      final usuarios = reserva['usuarios'];
+      
+      if (usuarios == null || (usuarios is List && usuarios.isEmpty)) {
+        return Container();
+      }
+      
+      List<dynamic> listaUsuarios = [];
+      if (usuarios is List) {
+        listaUsuarios = usuarios;
+      }
+      
+      if (listaUsuarios.isEmpty) {
+        return Container();
+      }
+      
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Pasajeros',
+            style: AppTheme.subtitleStyle.copyWith(
+              color: AppTheme.primaryColor,
+              fontSize: AppTheme.getFontSize(context, mobile: 18),
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 5,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            children: usuarios.map<Widget>((usuario) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.deepPurple.shade50,
-                        shape: BoxShape.circle,
+          SizedBox(height: AppTheme.getSpacing(context, mobile: 12)),
+          Container(
+            padding: EdgeInsets.all(AppTheme.getSpacing(context)),
+            decoration: BoxDecoration(
+              color: AppTheme.cardColor,
+              borderRadius: BorderRadius.circular(AppTheme.getSpacing(context, mobile: 16)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              children: listaUsuarios.map<Widget>((usuario) {
+                if (usuario is! Map) return Container();
+                
+                final usuarioMap = usuario as Map<String, dynamic>;
+                
+                return Padding(
+                  padding: EdgeInsets.only(bottom: AppTheme.getSpacing(context, mobile: 8)),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(AppTheme.getSpacing(context, mobile: 8)),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryColor.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.person,
+                          size: 20,
+                          color: AppTheme.primaryColor.withOpacity(0.7),
+                        ),
                       ),
-                      child: Icon(
-                        Icons.person,
-                        size: 20,
-                        color: Colors.deepPurple.shade400,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${usuario['nombre']} ${usuario['apellidos']}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 16,
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              Text(
-                                'DNI: ${usuario['dni']}',
-                                style: TextStyle(
-                                  color: Colors.grey.shade700,
-                                  fontSize: 14,
-                                ),
+                      SizedBox(width: AppTheme.getSpacing(context, mobile: 12)),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${usuarioMap['nombre'] ?? 'N/A'} ${usuarioMap['apellidos'] ?? ''}',
+                              style: AppTheme.bodyStyle.copyWith(
+                                fontWeight: FontWeight.w500,
+                                fontSize: AppTheme.getFontSize(context, mobile: 16),
                               ),
-                              if (usuario['edad'] != null) ...[
-                                Text(
-                                  ' • ',
-                                  style: TextStyle(
-                                    color: Colors.grey.shade700,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                Text(
-                                  'Edad: ${usuario['edad']}',
-                                  style: TextStyle(
-                                    color: Colors.grey.shade700,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                          if (usuario['email'] != null)
+                            ),
                             Row(
                               children: [
-                                Icon(
-                                  Icons.email,
-                                  size: 14,
-                                  color: Colors.grey.shade600,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  usuario['email'],
-                                  style: TextStyle(
-                                    color: Colors.grey.shade600,
-                                    fontSize: 14,
+                                Flexible( // Allow DNI to take available space
+                                  child: Text(
+                                    'DNI: ${usuarioMap['dni'] ?? 'N/A'}',
+                                    style: AppTheme.captionStyle.copyWith(
+                                      color: AppTheme.secondaryColor,
+                                      fontSize: AppTheme.getFontSize(context, mobile: 14),
+                                    ),
+                                    overflow: TextOverflow.ellipsis, // Add overflow handling
                                   ),
                                 ),
+                                if (usuarioMap['edad'] != null) ...[
+                                  Text(
+                                    ' • ',
+                                    style: AppTheme.captionStyle.copyWith(
+                                      color: AppTheme.secondaryColor,
+                                      fontSize: AppTheme.getFontSize(context, mobile: 14),
+                                    ),
+                                  ),
+                                  Flexible( // Allow Edad to take available space
+                                    child: Text(
+                                      'Edad: ${usuarioMap['edad']}',
+                                      style: AppTheme.captionStyle.copyWith(
+                                        color: AppTheme.secondaryColor,
+                                        fontSize: AppTheme.getFontSize(context, mobile: 14),
+                                      ),
+                                      overflow: TextOverflow.ellipsis, // Add overflow handling
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
-                        ],
+                            if (usuarioMap['email'] != null && usuarioMap['email'].toString().isNotEmpty)
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.email,
+                                    size: 14,
+                                    color: AppTheme.secondaryColor,
+                                  ),
+                                  SizedBox(width: AppTheme.getSpacing(context, mobile: 4)),
+                                  Expanded( // Allow email to take available space
+                                    child: Text(
+                                      usuarioMap['email'].toString(),
+                                      style: AppTheme.captionStyle.copyWith(
+                                        color: AppTheme.secondaryColor,
+                                        fontSize: AppTheme.getFontSize(context, mobile: 14),
+                                      ),
+                                      overflow: TextOverflow.ellipsis, // Add overflow handling
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
           ),
-        ),
-      ],
-    );
+        ],
+      );
+    } catch (e) {
+      print('Error construyendo info de personas: $e');
+      return Container();
+    }
   }
 }

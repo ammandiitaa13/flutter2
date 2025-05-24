@@ -88,7 +88,6 @@ class _ReservaFormScreenState extends State<ReservaFormScreen> with SingleTicker
   }
 
   void _mostrarFormularioUsuarios() {
-    // Dispose existing controllers before clearing the list and adding new ones
     for (final controllerMap in usuariosControllers) {
       for (final controller in controllerMap.values) {
         controller.dispose();
@@ -146,9 +145,9 @@ class _ReservaFormScreenState extends State<ReservaFormScreen> with SingleTicker
                     Divider(height: AppTheme.getSpacing(context, mobile: 24), color: AppTheme.primaryColor.withOpacity(0.5)),
                     Row(
                       children: [
-                        Expanded( // Usar Expanded para que el texto tome el espacio necesario y el Dropdown se ajuste
-                          flex: 2, // Darle más espacio al texto si es necesario
-                          child: FittedBox( // Ajustar el texto si es muy largo
+                        Expanded( 
+                          flex: 2, 
+                          child: FittedBox(
                             fit: BoxFit.scaleDown,
                             alignment: Alignment.centerLeft,
                             child: Text(
@@ -175,7 +174,7 @@ class _ReservaFormScreenState extends State<ReservaFormScreen> with SingleTicker
                               ),
                             ],
                           ),
-                          child: DropdownButtonHideUnderline( // Ocultar la línea por defecto para un look más limpio
+                          child: DropdownButtonHideUnderline( 
                             child: DropdownButton<int>(
                                 value: numPersonas,
                                 icon: Icon(Icons.arrow_drop_down, color: AppTheme.primaryColor),
@@ -187,14 +186,13 @@ class _ReservaFormScreenState extends State<ReservaFormScreen> with SingleTicker
                                             e.toString(),
                                           ),
                                         ))
-                                    .toList(), // Corrected: .toList() applied to the result of map
-                                onChanged: (value) { // Corrected: onChanged is a parameter of DropdownButton
+                                    .toList(),
+                                onChanged: (value) { 
                                   if (value != null) {
-                                    setState(() { // Update the main screen state's numPersonas
+                                    setState(() { 
                                       numPersonas = value;
                                     });
-                                    setStateDialog(() { // Update the dialog's local state
-                                      // Dispose old controllers
+                                    setStateDialog(() { 
                                       for (final controllerMap_ in usuariosControllers) { // Use different name to avoid conflict
                                         for (final controller in controllerMap_.values) {
                                           controller.dispose();
@@ -202,9 +200,6 @@ class _ReservaFormScreenState extends State<ReservaFormScreen> with SingleTicker
                                       }
                                       usuariosControllers.clear();
 
-                                      // Create new controllers for the new 'value'
-                                      // numPersonas is already updated by the setState above for the main screen,
-                                      // but here we use 'value' directly as it's the new count.
                                       for (int i = 0; i < value; i++) {
                                         usuariosControllers.add({
                                           'nombre': TextEditingController(),
@@ -425,33 +420,62 @@ class _ReservaFormScreenState extends State<ReservaFormScreen> with SingleTicker
               ),
             ] : null,
           ),
-          margin: EdgeInsets.symmetric(horizontal: AppTheme.getSpacing(context, mobile: 2, tablet: 3)), // Usar AppTheme.getSpacing
-          padding: EdgeInsets.symmetric(horizontal: AppTheme.getSpacing(context, mobile: 8, tablet: 10), // Use responsive spacing
-          vertical: AppTheme.getSpacing(context, mobile: 3, tablet: 5)), // Reducir padding vertical
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                color: isSelected ? AppTheme.primaryColor : AppTheme.secondaryColor,
-                size: AppTheme.getFontSize(context, mobile: 15, tablet: 18, desktop: 22), 
-              ), // Icon size is already responsive
-              SizedBox(height: AppTheme.getSpacing(context, mobile: 1, tablet: 2, desktop: 2)), 
-              FittedBox( 
-                fit: BoxFit.scaleDown,
-                child: Text(
-                    text,
-                    style: (isSelected ? AppTheme.bodyStyle : AppTheme.captionStyle).copyWith(
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      color: isSelected ? AppTheme.primaryColor : AppTheme.secondaryColor,
-                      fontSize: AppTheme.getFontSize(context, mobile: 9, tablet: 11, desktop: 13), // Ligeramente más pequeño
+          margin: EdgeInsets.symmetric(horizontal: AppTheme.getSpacing(context, mobile: 2, tablet: 3)),
+          padding: EdgeInsets.symmetric(
+            horizontal: AppTheme.getSpacing(context, mobile: 4, tablet: 8), 
+            vertical: AppTheme.getSpacing(context, mobile: 4, tablet: 6)
+          ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // Calcular si tenemos suficiente espacio para mostrar icono y texto
+              final hasSpaceForBoth = constraints.maxHeight > 40;
+              
+              if (hasSpaceForBoth) {
+                // Layout normal: icono arriba, texto abajo
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Flexible(
+                      child: Icon(
+                        icon,
+                        color: isSelected ? AppTheme.primaryColor : AppTheme.secondaryColor,
+                        size: AppTheme.getFontSize(context, mobile: 14, tablet: 16, desktop: 18),
+                      ),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    if (constraints.maxHeight > 30) // Solo mostrar texto si hay espacio suficiente
+                      Flexible(
+                        child: Padding(
+                          padding: EdgeInsets.only(top: AppTheme.getSpacing(context, mobile: 2, tablet: 4)),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              text,
+                              style: (isSelected ? AppTheme.bodyStyle : AppTheme.captionStyle).copyWith(
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                color: isSelected ? AppTheme.primaryColor : AppTheme.secondaryColor,
+                                fontSize: AppTheme.getFontSize(context, mobile: 8, tablet: 10, desktop: 12),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              } else {
+                // Layout compacto: solo icono centrado
+                return Center(
+                  child: Icon(
+                    icon,
+                    color: isSelected ? AppTheme.primaryColor : AppTheme.secondaryColor,
+                    size: AppTheme.getFontSize(context, mobile: 16, tablet: 18, desktop: 20),
                   ),
-              ),
-            ],
+                );
+              }
+            },
           ),
         ),
       ),
@@ -645,10 +669,16 @@ class _ReservaFormScreenState extends State<ReservaFormScreen> with SingleTicker
           child: Column(
             children: [
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: AppTheme.getSpacing(context, mobile: 12, tablet: 16), vertical: AppTheme.getSpacing(context, mobile: 6, tablet: 8)),
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppTheme.getSpacing(context, mobile: 12, tablet: 16), 
+                  vertical: AppTheme.getSpacing(context, mobile: 6, tablet: 8)
+                ),
                 child: Container(
-                  height: screenSize.height * 0.085, // Aumentar ligeramente la altura de la barra de pestañas
-                  padding: EdgeInsets.all(AppTheme.getSpacing(context, mobile: 8)),
+                  constraints: BoxConstraints(
+                    minHeight: screenSize.height * 0.06, // Altura mínima
+                    maxHeight: screenSize.height * 0.12, // Altura máxima
+                  ),
+                  padding: EdgeInsets.all(AppTheme.getSpacing(context, mobile: 6, tablet: 8)),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(AppTheme.getSpacing(context, mobile: 20)),

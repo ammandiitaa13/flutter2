@@ -6,6 +6,7 @@ import 'reservas_screen.dart';
 import 'firebase_options.dart';
 import 'firestore_service.dart';
 import 'galeria_screen.dart';
+import 'map_screen.dart';
 import 'feedback_screen.dart';
 import 'theme.dart';
 
@@ -123,6 +124,11 @@ class BottomNavControllerState extends State<BottomNavController> {
                 label: Text('Reservas'),
               ),
               NavigationRailDestination(
+                icon: Icon(Icons.map_outlined),
+                selectedIcon: Icon(Icons.map),
+                label: Text('Mapa'),
+              ),
+              NavigationRailDestination(
                 icon: Icon(Icons.cloud_outlined),
                 selectedIcon: Icon(Icons.cloud),
                 label: Text('Clima'),
@@ -157,6 +163,7 @@ class BottomNavControllerState extends State<BottomNavController> {
       children: const [
         KeyedSubtree(key: ValueKey('HomePage'), child: HomeScreen()),
         KeyedSubtree(key: ValueKey('ReservasPage'), child: ReservasScreen()),
+        KeyedSubtree(key: ValueKey('MapPage'), child: MapScreen()),
         KeyedSubtree(key: ValueKey('WeatherPage'), child: WeatherTableScreen()),
         KeyedSubtree(key: ValueKey('GaleriaPage'), child: CrossPlatformImagePicker()),
         KeyedSubtree(key: ValueKey('FeedbackPage'), child: FeedbackScreen()),
@@ -184,6 +191,11 @@ class BottomNavControllerState extends State<BottomNavController> {
           icon: Icon(Icons.list_outlined),
           activeIcon: Icon(Icons.list),
           label: 'Reservas',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.map_outlined),
+          activeIcon: Icon(Icons.map),
+          label: 'Mapa',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.cloud_outlined),

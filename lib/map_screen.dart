@@ -122,7 +122,8 @@ class _MapScreenState extends State<MapScreen> {
         'https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(query)}&format=json&limit=5&addressdetails=1&extratags=1'); 
     try {
       final response = await http.get(url, headers: {
-        'Accept-language': 'es-ES',
+        // Priorizar español, luego inglés como fallback general para Nominatim
+        'Accept-Language': 'es,en;q=0.9', 
         'User-Agent': 'com.example.tripmap' 
       });
       if (response.statusCode == 200) {
@@ -151,7 +152,7 @@ class _MapScreenState extends State<MapScreen> {
     final lon = double.tryParse(place['lon'].toString());
     final displayName = place['display_name']?.toString() ?? 'Lugar Desconocido';
     final osmIdString = place['osm_id']?.toString();
-    final osmType = place['osm_type']?.toString()?.toLowerCase(); // e.g., "node", "way", "relation"
+    final osmType = place['osm_type']?.toString().toLowerCase(); // e.g., "node", "way", "relation"
 
     if (lat != null && lon != null && osmIdString != null && osmType != null) {
       final osmId = int.tryParse(osmIdString);
@@ -174,7 +175,7 @@ class _MapScreenState extends State<MapScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Mostrando: $displayName. Toca el marcador para detalles.')),
+          SnackBar(content: Text('Mostrando: $displayName. Toca el marcador para más detalles.')),
         );
       }
     } else {
@@ -292,15 +293,20 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Widget _buildPoiSheetContent(Map<String, dynamic> poiData) {
-    final name = poiData['name:es'] ?? poiData['display_name_from_search'] ?? 'Lugar Desconocido';
+    // Priorizar nombre en español, luego nombre genérico, luego el nombre de la búsqueda
+    final name = poiData['name:es'] ?? poiData['name'] ?? poiData['display_name_from_search'] ?? 'Lugar Desconocido';
+    
     final tags = Map<String, dynamic>.from(poiData)
       ..remove('osm_id')
       ..remove('osm_type')
       ..remove('lat')
       ..remove('lon')
       ..remove('display_name_from_search')
-      ..remove('error')
-      ..remove('message'); 
+      ..remove('error') // Ya se maneja
+      ..remove('message') // Ya se maneja
+      ..remove('name') // Ya se usa para el título
+      ..remove('name:es'); // Ya se usa para el título
+
 
     List<Widget> detailWidgets = [
       Padding(
@@ -318,36 +324,57 @@ class _MapScreenState extends State<MapScreen> {
       detailWidgets.add(
         Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Text("Error al cargar detalles: ${poiData['error']}", style: const TextStyle(color: Colors.red, fontSize: 16)),
+          child: Text("Error al cargar detalles: ${poiData['error']}", style: AppTheme.bodyStyle.copyWith(color: Colors.red)),
         )
       );
     } else if (poiData['message'] != null) {
         detailWidgets.add(
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Text(poiData['message'], style: const TextStyle(fontSize: 16)),
+            child: Text(poiData['message'], style: AppTheme.bodyStyle),
           )
         );
-    } else if (tags.isEmpty) {
-      detailWidgets.add(const Padding(
-        padding: EdgeInsets.all(8.0),
-        child: Text("No hay detalles adicionales disponibles.", style: TextStyle(fontSize: 16)),
-      ));
     } else {
+      Map<String, String> displayTags = {}; // Clave: nombre de etiqueta formateado, Valor: valor de etiqueta
+
+      // Poblar con etiquetas genéricas primero
       tags.forEach((key, value) {
+        if (value != null && value.toString().isNotEmpty && !key.endsWith(':es') && !key.startsWith('name') && !key.startsWith('alt_name') && !key.startsWith('old_name') && !key.startsWith('int_name')) {
+          displayTags[_formatTagName(key)] = value.toString();
+        }
+      });
+
+      // Sobrescribir/Añadir con etiquetas específicas en español si existen y no son nombres alternativos ya cubiertos
+      tags.forEach((key, value) {
+        if (value != null && value.toString().isNotEmpty && key.endsWith(':es') && !key.startsWith('name:') && !key.startsWith('alt_name:') && !key.startsWith('old_name:') && !key.startsWith('int_name:')) {
+          String baseKey = key.substring(0, key.length - 3); // ej. 'description' de 'description:es'
+          displayTags[_formatTagName(baseKey)] = value.toString(); // El valor ahora es en español
+        }
+      });
+
+      if (displayTags.isEmpty) {
+        detailWidgets.add(Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text("No hay detalles adicionales disponibles.", style: AppTheme.bodyStyle),
+        ));
+      } else {
+        List<String> sortedDisplayKeys = displayTags.keys.toList()..sort();
+        for (String formattedKey in sortedDisplayKeys) {
+          String displayValue = displayTags[formattedKey]!;
         detailWidgets.add(
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${_formatTagName(key)}: ', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                Expanded(child: Text(value.toString(), style: const TextStyle(fontSize: 15))),
+                Text('$formattedKey: ', style: AppTheme.bodyStyle.copyWith(fontWeight: FontWeight.bold)),
+                Expanded(child: Text(displayValue, style: AppTheme.bodyStyle)),
               ],
             ),
           )
         );
-      });
+      }
+    }
     }
     return DraggableScrollableSheet(
         initialChildSize: 0.4, 
@@ -370,8 +397,7 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mapa Interactivo'),
-        backgroundColor: AppTheme.primaryColor,
+        title: const Text('Mapa Interactivo'), // El estilo se hereda de ThemeData
       ),
       body: Column(
         children: [
@@ -379,19 +405,16 @@ class _MapScreenState extends State<MapScreen> {
             padding: const EdgeInsets.all(8.0),
             child: TextField(
               controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Buscar lugar...',
+              decoration: AppTheme.getInputDecoration(
+                context,
+                hintText: 'Buscar lugar...', 
+                label: null, // No necesitamos un label flotante aquí
+              ).copyWith( // Usamos copyWith para añadir el suffixIcon específico
                 suffixIcon: IconButton(
-                  icon: _isSearching
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.search),
-                  onPressed: () => _searchPlace(_searchController.text),
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.0),
+                    icon: _isSearching
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primaryColor))
+                        : const Icon(Icons.search, color: AppTheme.primaryColor),
+                    onPressed: () => _searchPlace(_searchController.text),
                 ),
               ),
               onSubmitted: _searchPlace,
@@ -405,7 +428,7 @@ class _MapScreenState extends State<MapScreen> {
                 itemBuilder: (context, index) {
                   final place = _searchResults[index];
                   return ListTile(
-                    title: Text(place['display_name'] ?? 'Lugar desconocido'),
+                    title: Text(place['display_name'] ?? 'Lugar desconocido', style: AppTheme.bodyStyle),
                     onTap: () => _goToPlace(place),
                   );
                 },
@@ -440,7 +463,8 @@ class _MapScreenState extends State<MapScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _isLoadingLocation ? null : _determinePosition,
-        backgroundColor: AppTheme.primaryColor,
+        // El color de fondo y del icono se hereda de ThemeData (colorScheme.secondary o primary)
+        // Si quieres forzarlo, puedes hacerlo: backgroundColor: AppTheme.primaryColor,
         child: _isLoadingLocation
             ? const SizedBox(
                 width: 24,

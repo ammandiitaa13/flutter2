@@ -59,7 +59,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error al enviar la valoración: $e'),
-          backgroundColor: AppTheme.primaryColor.withOpacity(0.8),
+          backgroundColor: AppTheme.primaryColor.withAlpha((255 * 0.8).round()), // Ya corregido
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -216,7 +216,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha((255 * 0.05).round()), // Ya corregido
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),

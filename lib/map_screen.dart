@@ -454,8 +454,8 @@ class _MapScreenState extends State<MapScreen> {
                   urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                   userAgentPackageName: 'com.example.tripmap',
                   tileProvider: CancellableNetworkTileProvider(), // Use the cancellable tile provider
-                ),
-                MarkerLayer(markers: [_ifNotNull(_currentLocationMarker), _ifNotNull(_selectedPoiMarker)].where((m) => m != null).cast<Marker>().toList()),
+                ), // Capa de tiles del mapa
+                MarkerLayer(markers: [_ifNotNull(_currentLocationMarker), _ifNotNull(_selectedPoiMarker)].where((m) => m != null).cast<Marker>().toList()), // Capa de marcadores
               ],
             ),
           ),

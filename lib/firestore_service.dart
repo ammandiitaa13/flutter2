@@ -309,11 +309,11 @@ class FirestoreService {
   // Inicializa las colecciones si no existen
   static Future<void> inicializarDatos() async {
     try {
-      crearHoteles();
-      crearVuelos();
-      crearTrenes();
-      crearCochesCiudad();
-      crearActividades();
+      await crearHoteles();
+      await crearVuelos();
+      await crearTrenes();
+      await crearCochesCiudad();
+      await crearActividades();
     } catch (e, stackTrace) {
         _logger.e("Error al inicializar datos", error: e, stackTrace: stackTrace);
         throw Exception("No se pudieron inicializar los datos");

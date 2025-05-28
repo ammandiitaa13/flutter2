@@ -144,7 +144,7 @@ class _WeatherTableScreenState extends State<WeatherTableScreen> {
               vertical: spacing / 2,
             ),
             decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withOpacity(0.1),
+              color: AppTheme.primaryColor.withAlpha((255 * 0.1).round()),
               borderRadius: BorderRadius.circular(20),
             ),
             child: FittedBox(
@@ -260,9 +260,9 @@ class _WeatherTableScreenState extends State<WeatherTableScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            _hasSearched ? Icons.cloud_off : Icons.cloud_queue,
-            size: AppTheme.isDesktop(context) ? 100 : AppTheme.isTablet(context) ? 90 : 80,
-            color: AppTheme.primaryColor.withOpacity(0.6),
+            _hasSearched ? Icons.cloud_off : Icons.cloud_queue, // Icono para estado vacío
+            size: AppTheme.isDesktop(context) ? 100 : AppTheme.isTablet(context) ? 90 : 80, // Tamaño del icono adaptable
+            color: AppTheme.primaryColor.withAlpha((255 * 0.6).round()), // Corregido
           ),
           SizedBox(height: AppTheme.getSpacing(context, mobile: 16, tablet: 20, desktop: 24)),
           Text(
@@ -310,7 +310,7 @@ class _WeatherTableScreenState extends State<WeatherTableScreen> {
                 vertical: AppTheme.getSpacing(context, mobile: 8, tablet: 12, desktop: 16),
               ),
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.1),
+                color: AppTheme.primaryColor.withAlpha((255 * 0.1).round()),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -373,7 +373,7 @@ class _WeatherTableScreenState extends State<WeatherTableScreen> {
                 child: Container(
                   margin: AppTheme.getHorizontalPadding(context),
                   decoration: AppTheme.getBoxDecoration(context).copyWith(
-                    color: AppTheme.backgroundColor.withOpacity(0.95),
+                    color: AppTheme.backgroundColor.withAlpha((255 * 0.95).round()),
                     borderRadius: BorderRadius.circular(24),
                   ),
                   child: ClipRRect(

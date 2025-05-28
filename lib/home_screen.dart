@@ -134,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(mensaje),
-        backgroundColor: AppTheme.primaryColor.withOpacity(0.8),
+        backgroundColor: AppTheme.primaryColor.withAlpha((255 * 0.8).round()), // Ya corregido
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
@@ -225,7 +225,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Icon(
-                        Icons.public,
+            Icons.public, // Icono para la sección principal
                         size: AppTheme.isDesktop(context) ? 80 : AppTheme.isTablet(context) ? 70 : 60,
                         color: AppTheme.primaryColor,
                       ),

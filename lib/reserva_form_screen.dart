@@ -78,7 +78,7 @@ class _ReservaFormScreenState extends State<ReservaFormScreen> with SingleTicker
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(mensaje),
-        backgroundColor: AppTheme.primaryColor.withOpacity(0.8),
+        backgroundColor: AppTheme.primaryColor.withAlpha((255 * 0.8).round()), // Ya corregido
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.getSpacing(context, mobile: 10)),
@@ -142,7 +142,7 @@ class _ReservaFormScreenState extends State<ReservaFormScreen> with SingleTicker
                         ),
                       ],
                     ),
-                    Divider(height: AppTheme.getSpacing(context, mobile: 24), color: AppTheme.primaryColor.withOpacity(0.5)),
+                    Divider(height: AppTheme.getSpacing(context, mobile: 24), color: AppTheme.primaryColor.withAlpha((255 * 0.5).round())), // Corregido
                     Row(
                       children: [
                         Expanded( 
@@ -163,16 +163,16 @@ class _ReservaFormScreenState extends State<ReservaFormScreen> with SingleTicker
                         Container(
                           padding: EdgeInsets.symmetric(horizontal: AppTheme.getSpacing(context, mobile: 12)),
                           decoration: BoxDecoration(
-                            color: AppTheme.backgroundColor,
+                            color: AppTheme.backgroundColor, // Color de fondo del Dropdown
                             borderRadius: BorderRadius.circular(AppTheme.getSpacing(context, mobile: 8, tablet: 12)), // Reducir un poco el radio
-                            border: Border.all(color: AppTheme.primaryColor.withOpacity(0.3)),
+                            border: Border.all(color: AppTheme.primaryColor.withAlpha((255 * 0.3).round())), // Corregido
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
+                                color: Colors.black.withAlpha((255 * 0.05).round()), // Corregido
                                 blurRadius: 4,
                                 offset: const Offset(0, 2),
                               ),
-                            ],
+                            ], // Sombra
                           ),
                           child: DropdownButtonHideUnderline( 
                             child: DropdownButton<int>(
@@ -226,25 +226,25 @@ class _ReservaFormScreenState extends State<ReservaFormScreen> with SingleTicker
                             margin: EdgeInsets.only(bottom: AppTheme.getSpacing(context)),
                             padding: EdgeInsets.all(AppTheme.getSpacing(context)),
                             decoration: BoxDecoration(
-                              color: AppTheme.cardColor,
+                              color: AppTheme.cardColor, // Color de fondo de la tarjeta de pasajero
                               borderRadius: BorderRadius.circular(AppTheme.getSpacing(context, mobile: 16)),
-                              border: Border.all(color: AppTheme.primaryColor.withOpacity(0.2)),
+                              border: Border.all(color: AppTheme.primaryColor.withAlpha((255 * 0.2).round())), // Corregido
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
+                                  color: Colors.black.withAlpha((255 * 0.05).round()), // Corregido
                                   blurRadius: 4,
                                   offset: const Offset(0, 2),
                                 ),
-                              ],
+                              ], // Sombra
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
-                                  children: [
-                                    Icon(Icons.person, color: AppTheme.primaryColor.withOpacity(0.7)),
-                                    SizedBox(width: AppTheme.getSpacing(context, mobile: 8)),
-                                    Text(
+                                  children: [ // Icono y título del pasajero
+                                    Icon(Icons.person, color: AppTheme.primaryColor.withAlpha((255 * 0.7).round())), // Corregido
+                                    SizedBox(width: AppTheme.getSpacing(context, mobile: 8)), // Espacio entre icono y texto
+                                    Text( // Título del pasajero
                                       'Pasajero ${i + 1}',
                                       style: AppTheme.subtitleStyle.copyWith(
                                         color: AppTheme.primaryColor,
@@ -366,8 +366,8 @@ class _ReservaFormScreenState extends State<ReservaFormScreen> with SingleTicker
       keyboardType: inputType,
       onChanged: onChanged,
       decoration: AppTheme.getInputDecoration(context, label: Text(label)).copyWith(
-        prefixIcon: Icon(icon, color: AppTheme.primaryColor.withOpacity(0.8), size: 20),
-      ),
+        prefixIcon: Icon(icon, color: AppTheme.primaryColor.withAlpha((255 * 0.8).round()), size: 20), // Corregido
+      ).copyWith(prefixIcon: Icon(icon, color: AppTheme.primaryColor.withAlpha((255 * 0.8).round()), size: 20)), // Corregido
     );
   }
 
@@ -390,6 +390,7 @@ class _ReservaFormScreenState extends State<ReservaFormScreen> with SingleTicker
         _isLoading = false;
       });
 
+      if (!mounted) return;
       Navigator.pop(context); // Cierra el diálogo
       _mostrarMensaje('Reserva realizada con éxito');
     } catch (e) {
@@ -414,7 +415,7 @@ class _ReservaFormScreenState extends State<ReservaFormScreen> with SingleTicker
             borderRadius: BorderRadius.circular(AppTheme.getSpacing(context, mobile: 16)),
             boxShadow: isSelected ? [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withAlpha((255 * 0.1).round()), // Corregido
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -422,7 +423,7 @@ class _ReservaFormScreenState extends State<ReservaFormScreen> with SingleTicker
           ),
           margin: EdgeInsets.symmetric(horizontal: AppTheme.getSpacing(context, mobile: 2, tablet: 3)),
           padding: EdgeInsets.symmetric(
-            horizontal: AppTheme.getSpacing(context, mobile: 4, tablet: 8), 
+            horizontal: AppTheme.getSpacing(context, mobile: 4, tablet: 8), // Padding horizontal
             vertical: AppTheme.getSpacing(context, mobile: 4, tablet: 6)
           ),
           child: LayoutBuilder(
@@ -437,7 +438,7 @@ class _ReservaFormScreenState extends State<ReservaFormScreen> with SingleTicker
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Flexible(
-                      child: Icon(
+                      child: Icon( // Icono de la pestaña
                         icon,
                         color: isSelected ? AppTheme.primaryColor : AppTheme.secondaryColor,
                         size: AppTheme.getFontSize(context, mobile: 14, tablet: 16, desktop: 18),
@@ -448,7 +449,7 @@ class _ReservaFormScreenState extends State<ReservaFormScreen> with SingleTicker
                         child: Padding(
                           padding: EdgeInsets.only(top: AppTheme.getSpacing(context, mobile: 2, tablet: 4)),
                           child: FittedBox(
-                            fit: BoxFit.scaleDown,
+                            fit: BoxFit.scaleDown, // Ajustar texto
                             child: Text(
                               text,
                               style: (isSelected ? AppTheme.bodyStyle : AppTheme.captionStyle).copyWith(
@@ -468,7 +469,7 @@ class _ReservaFormScreenState extends State<ReservaFormScreen> with SingleTicker
               } else {
                 // Layout compacto: solo icono centrado
                 return Center(
-                  child: Icon(
+                  child: Icon( // Icono de la pestaña (compacto)
                     icon,
                     color: isSelected ? AppTheme.primaryColor : AppTheme.secondaryColor,
                     size: AppTheme.getFontSize(context, mobile: 16, tablet: 18, desktop: 20),
@@ -488,7 +489,7 @@ class _ReservaFormScreenState extends State<ReservaFormScreen> with SingleTicker
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search_off, size: 64, color: AppTheme.secondaryColor.withOpacity(0.6)),
+            Icon(Icons.search_off, size: 64, color: AppTheme.secondaryColor.withAlpha((255 * 0.6).round())), // Corregido
             SizedBox(height: AppTheme.getSpacing(context)),
             Text(
               'No se encontraron $title disponibles',
@@ -517,7 +518,7 @@ class _ReservaFormScreenState extends State<ReservaFormScreen> with SingleTicker
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withAlpha((255 * 0.05).round()), // Corregido
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -679,8 +680,8 @@ class _ReservaFormScreenState extends State<ReservaFormScreen> with SingleTicker
                     maxHeight: screenSize.height * 0.12, // Altura máxima
                   ),
                   padding: EdgeInsets.all(AppTheme.getSpacing(context, mobile: 6, tablet: 8)),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                  decoration: BoxDecoration( // Decoración del contenedor de pestañas
+                    color: Colors.white.withAlpha((255 * 0.2).round()), // Corregido
                     borderRadius: BorderRadius.circular(AppTheme.getSpacing(context, mobile: 20)),
                   ),
                   child: Row(

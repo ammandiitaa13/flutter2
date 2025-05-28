@@ -207,6 +207,7 @@ class CrossPlatformImagePickerState extends State<CrossPlatformImagePicker> {
       await _savePhotos();
       setState(() => _isLoading = false);
 
+      if (!mounted) return;
       if (newPhotos.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -218,6 +219,7 @@ class CrossPlatformImagePickerState extends State<CrossPlatformImagePicker> {
       }
     } catch (e) {
       setState(() => _isLoading = false);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error al seleccionar imágenes: $e'),
@@ -257,6 +259,7 @@ class CrossPlatformImagePickerState extends State<CrossPlatformImagePicker> {
         _isSelectionMode = false;
       });
       
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Fotos eliminadas'),
@@ -444,7 +447,7 @@ class CrossPlatformImagePickerState extends State<CrossPlatformImagePicker> {
                         });
                       },
                       backgroundColor: Colors.white,
-                      selectedColor: AppTheme.primaryColor.withOpacity(0.3),
+                      selectedColor: AppTheme.primaryColor.withAlpha((255 * 0.3).round()), // Corregido
                       checkmarkColor: AppTheme.primaryColor,
                     ),
                   );
@@ -492,7 +495,7 @@ class CrossPlatformImagePickerState extends State<CrossPlatformImagePicker> {
           Icon(
             Icons.photo_library_outlined,
             size: 80,
-            color: AppTheme.primaryColor.withOpacity(0.5),
+          color: AppTheme.primaryColor.withAlpha((255 * 0.5).round()), // Corregido
           ),
           const SizedBox(height: 16),
           Text(
@@ -555,7 +558,7 @@ class CrossPlatformImagePickerState extends State<CrossPlatformImagePicker> {
                   : null,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withAlpha((255 * 0.1).round()), // Corregido
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),

@@ -13,6 +13,8 @@ class ReservasScreen extends StatefulWidget {
 }
 
 class _ReservasScreenState extends State<ReservasScreen> {
+  final Logger _logger = Logger();
+
   Stream<List<Map<String, dynamic>>> _getReservas() {
     return FirestoreService.obtenerReservas();
   }
@@ -24,7 +26,7 @@ class _ReservasScreenState extends State<ReservasScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Reserva eliminada con éxito'),
-          backgroundColor: AppTheme.primaryColor.withOpacity(0.8),
+          backgroundColor: AppTheme.primaryColor.withAlpha((255 * 0.8).round()), // Ya corregido
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -185,19 +187,19 @@ class _ReservasScreenState extends State<ReservasScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.error_outline, size: 64, color: Colors.white.withOpacity(0.8)),
-                      SizedBox(height: AppTheme.getSpacing(context)),
+                      Icon(Icons.error_outline, size: 64, color: Colors.white.withAlpha((255 * 0.8).round())), // Corregido
+                      SizedBox(height: AppTheme.getSpacing(context)), // Espacio vertical
                       Text(
                         'Error al cargar los datos',
                         style: AppTheme.subtitleStyle.copyWith(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withAlpha((255 * 0.9).round()), // Corregido
                         ),
                       ),
                       SizedBox(height: AppTheme.getSpacing(context, mobile: 8)),
                       Text(
                         '${snapshot.error}',
                         style: AppTheme.bodyStyle.copyWith(
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withAlpha((255 * 0.7).round()), // Corregido
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -211,19 +213,19 @@ class _ReservasScreenState extends State<ReservasScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.search_off, size: 80, color: Colors.white.withOpacity(0.8)),
-                      SizedBox(height: AppTheme.getSpacing(context)),
+                      Icon(Icons.search_off, size: 80, color: Colors.white.withAlpha((255 * 0.8).round())), // Corregido
+                      SizedBox(height: AppTheme.getSpacing(context)), // Espacio vertical
                       Text(
                         'No tienes reservas',
                         style: AppTheme.subtitleStyle.copyWith(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withAlpha((255 * 0.9).round()), // Corregido
                         ),
                       ),
                       SizedBox(height: AppTheme.getSpacing(context, mobile: 8)),
                       Text(
                         'Tus futuras reservas aparecerán aquí',
                         style: AppTheme.bodyStyle.copyWith(
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withAlpha((255 * 0.7).round()), // Corregido
                         ),
                       ),
                     ],
@@ -255,8 +257,8 @@ class _ReservasScreenState extends State<ReservasScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildReservaHeader(tituloReserva, total, reserva['fecha']),
-                            Divider(color: AppTheme.primaryColor.withOpacity(0.2), thickness: 1),
+                            _buildReservaHeader(tituloReserva, total, reserva['fecha']), // Encabezado de la reserva
+                            Divider(color: AppTheme.primaryColor.withAlpha((255 * 0.2).round()), thickness: 1), // Corregido
                             Padding(
                               padding: EdgeInsets.all(AppTheme.getSpacing(context)),
                               child: Column(
@@ -350,7 +352,7 @@ class _ReservasScreenState extends State<ReservasScreen> {
         }
       }
     } catch (e) {
-      print('Error obteniendo título de reserva: $e');
+      _logger.e('Error obteniendo título de reserva: $e');
     }
     
     return 'Reserva ${index + 1}';
@@ -365,7 +367,7 @@ class _ReservasScreenState extends State<ReservasScreen> {
         return double.tryParse(precioTotal) ?? 0.0;
       }
     } catch (e) {
-      print('Error obteniendo total: $e');
+      _logger.e('Error obteniendo total: $e');
     }
     return 0.0;
   }
@@ -374,7 +376,7 @@ class _ReservasScreenState extends State<ReservasScreen> {
     return Container(
       padding: EdgeInsets.all(AppTheme.getSpacing(context)),
       decoration: BoxDecoration(
-        color: AppTheme.primaryColor.withOpacity(0.05),
+        color: AppTheme.primaryColor.withAlpha((255 * 0.05).round()), // Corregido
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(AppTheme.getSpacing(context, mobile: 16, tablet: 20, desktop: 24)),
           topRight: Radius.circular(AppTheme.getSpacing(context, mobile: 16, tablet: 20, desktop: 24)),
@@ -401,7 +403,7 @@ class _ReservasScreenState extends State<ReservasScreen> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: AppTheme.getSpacing(context, mobile: 16), vertical: AppTheme.getSpacing(context, mobile: 8)),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryColor,
+                  color: AppTheme.primaryColor, // Color de fondo para el precio
                   borderRadius: BorderRadius.circular(AppTheme.getSpacing(context, mobile: 16)),
                 ),
                 child: Text(
@@ -420,14 +422,14 @@ class _ReservasScreenState extends State<ReservasScreen> {
               padding: EdgeInsets.only(top: AppTheme.getSpacing(context, mobile: 8)),
               child: Row(
                 children: [
-                  Icon(Icons.calendar_today, size: 16, color: AppTheme.primaryColor.withOpacity(0.7)),
+                  Icon(Icons.calendar_today, size: 16, color: AppTheme.primaryColor.withAlpha((255 * 0.7).round())),
                   SizedBox(width: AppTheme.getSpacing(context, mobile: 8)),
                   Expanded( // Allow text to wrap or take available space
                     child: Text(
                       'Reservado el ${_formatearFecha(fecha)}',
-                      style: AppTheme.captionStyle.copyWith( // Use theme style
-                        color: AppTheme.primaryColor.withOpacity(0.9),
-                        fontSize: AppTheme.getFontSize(context, mobile: 13, tablet: 14), // Responsive font size
+                      style: AppTheme.captionStyle.copyWith(
+                        color: AppTheme.primaryColor.withAlpha((255 * 0.9).round()), // Corregido
+                        fontSize: AppTheme.getFontSize(context, mobile: 13, tablet: 14),
                       ),
                     ),
                   ),
@@ -513,7 +515,7 @@ class _ReservasScreenState extends State<ReservasScreen> {
         }
       }
     } catch (e) {
-      print('Error construyendo servicios: $e');
+      _logger.e('Error construyendo servicios: $e');
     }
     
     return Column(
@@ -532,7 +534,7 @@ class _ReservasScreenState extends State<ReservasScreen> {
           Container(
             padding: EdgeInsets.all(AppTheme.getSpacing(context)),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest, // Using a theme color for warning background
+              color: Theme.of(context).colorScheme.surfaceContainerHighest, // Usando un color del tema para el fondo de advertencia
               borderRadius: BorderRadius.circular(AppTheme.getSpacing(context, mobile: 12)),
               border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
             ),
@@ -540,12 +542,12 @@ class _ReservasScreenState extends State<ReservasScreen> {
               children: [
                 Icon(Icons.warning_amber_rounded, color: Colors.amber), // Using a consistent warning icon color
                 SizedBox(width: AppTheme.getSpacing(context, mobile: 12)),
-                Expanded(
+                Expanded( // Permite que el texto de advertencia se ajuste
                   child: Text(
                     'No se pudieron cargar los servicios contratados',
                     style: AppTheme.bodyStyle.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant, // Using a theme color for warning text
-                      fontWeight: FontWeight.w500,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant, // Usando un color del tema para el texto de advertencia
+                      fontWeight: FontWeight.w500, // Peso de fuente
                     ),
                   ),
                 ),
@@ -569,7 +571,7 @@ class _ReservasScreenState extends State<ReservasScreen> {
         }
       }
     } catch (e) {
-      print('Error formateando precio: $e');
+      _logger.e('Error formateando precio: $e');
     }
     return '0.00';
   }
@@ -585,11 +587,11 @@ class _ReservasScreenState extends State<ReservasScreen> {
       margin: EdgeInsets.only(bottom: AppTheme.getSpacing(context, mobile: 12)),
       padding: EdgeInsets.all(AppTheme.getSpacing(context)),
       decoration: BoxDecoration(
-        color: AppTheme.cardColor,
+        color: AppTheme.cardColor, // Color de fondo de la tarjeta
         borderRadius: BorderRadius.circular(AppTheme.getSpacing(context, mobile: 16)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha((255 * 0.05).round()), // Corregido
             blurRadius: 4, // Consistent with AppTheme.boxDecoration
             offset: const Offset(0, 2),
           ),
@@ -600,8 +602,8 @@ class _ReservasScreenState extends State<ReservasScreen> {
         children: [
           Container(
             padding: EdgeInsets.all(AppTheme.getSpacing(context, mobile: 10)),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withOpacity(0.1),
+            decoration: BoxDecoration( // Decoración del icono del servicio
+              color: AppTheme.primaryColor.withAlpha((255 * 0.1).round()), // Corregido
               borderRadius: BorderRadius.circular(AppTheme.getSpacing(context, mobile: 12)),
             ),
             child: Icon(
@@ -641,7 +643,7 @@ class _ReservasScreenState extends State<ReservasScreen> {
           Container(
             padding: EdgeInsets.symmetric(horizontal: AppTheme.getSpacing(context, mobile: 12), vertical: AppTheme.getSpacing(context, mobile: 6)),
             decoration: BoxDecoration(
-              color: Colors.green.shade50, // Keeping specific color for price indication
+              color: Colors.green.shade50, // Manteniendo color específico para indicación de precio
               borderRadius: BorderRadius.circular(AppTheme.getSpacing(context, mobile: 12)),
               border: Border.all(color: Colors.green.shade200),
             ),
@@ -690,11 +692,11 @@ class _ReservasScreenState extends State<ReservasScreen> {
           Container(
             padding: EdgeInsets.all(AppTheme.getSpacing(context)),
             decoration: BoxDecoration(
-              color: AppTheme.cardColor,
+              color: AppTheme.cardColor, // Color de fondo de la tarjeta de pasajeros
               borderRadius: BorderRadius.circular(AppTheme.getSpacing(context, mobile: 16)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withAlpha((255 * 0.05).round()), // Corregido
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
@@ -713,13 +715,13 @@ class _ReservasScreenState extends State<ReservasScreen> {
                       Container(
                         padding: EdgeInsets.all(AppTheme.getSpacing(context, mobile: 8)),
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withOpacity(0.1),
+                          color: AppTheme.primaryColor.withAlpha((255 * 0.1).round()), // Corregido
                           shape: BoxShape.circle,
-                        ),
+                        ), // Decoración del icono de pasajero
                         child: Icon(
                           Icons.person,
                           size: 20,
-                          color: AppTheme.primaryColor.withOpacity(0.7),
+                          color: AppTheme.primaryColor.withAlpha((255 * 0.7).round()), // Corregido
                         ),
                       ),
                       SizedBox(width: AppTheme.getSpacing(context, mobile: 12)),
@@ -733,7 +735,7 @@ class _ReservasScreenState extends State<ReservasScreen> {
                                 fontWeight: FontWeight.w500,
                                 fontSize: AppTheme.getFontSize(context, mobile: 16),
                               ),
-                            ),
+                            ), // Nombre completo del pasajero
                             Row(
                               children: [
                                 Flexible( // Allow DNI to take available space
@@ -744,7 +746,7 @@ class _ReservasScreenState extends State<ReservasScreen> {
                                       fontSize: AppTheme.getFontSize(context, mobile: 14),
                                     ),
                                     overflow: TextOverflow.ellipsis, // Add overflow handling
-                                  ),
+                                  ), // DNI del pasajero
                                 ),
                                 if (usuarioMap['edad'] != null) ...[
                                   Text(
@@ -762,7 +764,7 @@ class _ReservasScreenState extends State<ReservasScreen> {
                                         fontSize: AppTheme.getFontSize(context, mobile: 14),
                                       ),
                                       overflow: TextOverflow.ellipsis, // Add overflow handling
-                                    ),
+                                    ), // Edad del pasajero
                                   ),
                                 ],
                               ],
@@ -784,7 +786,7 @@ class _ReservasScreenState extends State<ReservasScreen> {
                                         fontSize: AppTheme.getFontSize(context, mobile: 14),
                                       ),
                                       overflow: TextOverflow.ellipsis, // Add overflow handling
-                                    ),
+                                  ), // Email del pasajero
                                   ),
                                 ],
                               ),
@@ -800,7 +802,7 @@ class _ReservasScreenState extends State<ReservasScreen> {
         ],
       );
     } catch (e) {
-      print('Error construyendo info de personas: $e');
+      _logger.e('Error construyendo info de personas: $e');
       return Container();
     }
   }
